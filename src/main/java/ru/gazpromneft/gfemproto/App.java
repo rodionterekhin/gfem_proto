@@ -2,6 +2,10 @@ package ru.gazpromneft.gfemproto;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.IOException;
 
 import java.util.HashMap;
 /**
@@ -14,20 +18,20 @@ import java.util.HashMap;
 */
 
 public class App {
-    
-    String filePath;
-    Workbook workbook;
 
     public App(String targetFilePath) {
-		this.filePath = targetFilePath;
-		this.workbook = readWorkbook(filePath);
-		boolean result = calculate(workbook);
-        boolean exitRequested = false;
+        String filePath = targetFilePath;
+	try(Workbook workbook = readWorkbook(filePath)) {
+	    boolean result = calculate(workbook);            
+            boolean exitRequested = false;
 	
-		// Application main loop
-		while (!exitRequested) {
-	    	// HashMap<> changes = processInput(askForInput());
-		}
+	    // Application main loop
+            while (!exitRequested) {
+                // HashMap<> changes = processInput(askForInput());
+            }
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
 
     }
 
@@ -36,19 +40,19 @@ public class App {
 		Workbook wb;
 		if (path.endsWith(".xlsx")) {
 				wb = WorkbookFactory.create(fis);
-		}
+		} else return null;
 		return wb;
 	}
 
-	private calculate(Workbook wb) {
-		;
+	private boolean calculate(Workbook wb) {
+		return false;
 	}
 
-	private HashMap<> processInput(String input) {
+	private HashMap processInput(String input) {
 		return null;
 	}
 
-	private askForInput() {
+	private String askForInput() {
 		return "Not implemented yet";
 	}
 
