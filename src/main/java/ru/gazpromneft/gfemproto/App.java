@@ -1,11 +1,13 @@
 package ru.gazpromneft.gfemproto;
 
 import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -117,6 +119,8 @@ public class App implements IMainController {
 
 
     public static void main(String[] args) {
+        WorkbookFactory.addProvider(new HSSFWorkbookFactory());
+        WorkbookFactory.addProvider(new XSSFWorkbookFactory());
         for (String a : FunctionEval.getSupportedFunctionNames())
             System.out.println(a);
         new App();
