@@ -2,8 +2,10 @@ package ru.gazpromneft.gfemproto;
 
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
+import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +29,9 @@ public class App implements IMainController {
 
     private final MainFrame mf;
     private Workbook model;
+    private Workbook data;
     private final Logger logger;
+    protected FormulaEvaluator formulaEvaluator;
 
     public App() {
         MainFrame.updateLookAndFeel();
@@ -65,19 +69,35 @@ public class App implements IMainController {
     }
 
     private boolean calculate(Workbook wb, boolean clearCache) {
-        FormulaEvaluator evaluator = wb.getCreationHelper().createFormulaEvaluator();
 
+        formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
         StringBuilder report = new StringBuilder();
 
         if (clearCache)
-            evaluator.clearAllCachedResultValues();
+            formulaEvaluator.clearAllCachedResultValues();
 
         long load_time = System.nanoTime();
-        evaluator.evaluateAll();
+        formulaEvaluator.evaluateAll();
         // TODO CustomEvaluator: check if it is possible to calculate formulas
         //  without need to them have all the arguments already calculated
 
         System.out.printf("Workbook evaluation time is: %f mS%n", (double) (System.nanoTime() - load_time) / 1e6);
+        Sheet model = wb.getSheet("model");
+
+        for (Row r : model) {
+            for (Cell c : r) {
+                try {
+                    if (c.getCellType() == CellType.FORMULA) {
+                        double a = c.getNumericCellValue();
+                    }
+                }
+                catch (Exception e) {
+                    System.out.println(c.getAddress());
+                }
+            }
+        }
+
+
         Sheet output = wb.getSheet("output");
 
         for (Row r : output) {
@@ -86,10 +106,8 @@ public class App implements IMainController {
             String outputType = r.getCell(0).getStringCellValue();
             String outputName = r.getCell(1).getStringCellValue();
             double outputValue = r.getCell(2).getNumericCellValue();
-            report.append(outputType)
-                    .append(": ")
-                    .append(outputName)
-                    .append(": ")
+            report.append(outputName)
+                    .append(" = ")
                     .append(outputValue)
                     .append("\n");
         }
@@ -98,7 +116,9 @@ public class App implements IMainController {
     }
 
 
-    public static void main() {
+    public static void main(String[] args) {
+        for (String a : FunctionEval.getSupportedFunctionNames())
+            System.out.println(a);
         new App();
     }
 
@@ -163,13 +183,40 @@ public class App implements IMainController {
         return correct;
     }
 
+    private void updateModelWithData(Workbook model, Workbook data) {
+        Sheet dataSheet = data.getSheetAt(0);
+        Sheet modelDataSheet = model.getSheet("input");
+
+
+        for (Row r : dataSheet) {
+            for (Cell sourceCell : r) {
+                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
+                        .getCell(sourceCell.getColumnIndex());
+                switch (sourceCell.getCellType()) {
+                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
+                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
+                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
+                    case BLANK -> targetCell.setBlank();
+                }
+            }
+        }
+    }
+
 
     @Override
     public String loadData() {
         File dataFile = mf.openFileDialog();
-        if (dataFile != null) {
-            return dataFile.getAbsolutePath();
-        } else return "";
+        if (Objects.isNull(dataFile)) return ""; // Nothing was chosen
+        Workbook probablyData = readWorkbook(dataFile);
+        if (data != null) {
+            try {
+                data.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Не могу закрыть данные.");
+            }
+        }
+        data = probablyData;
+        return dataFile.getAbsolutePath();
     }
 
     @Override
@@ -178,6 +225,26 @@ public class App implements IMainController {
             mf.showError("Сначала подгрузите модель!");
             return;
         }
+        if (data != null)
+            updateModelWithData(model, data);
         calculate(model, true);
+    }
+
+    public void exit() {
+        if (model != null) {
+            try {
+                model.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Не могу закрыть модель.");
+            }
+        }
+        if (data != null) {
+            try {
+                data.close();
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "Не могу закрыть данные.");
+            }
+        }
+        System.exit(0);
     }
 }
