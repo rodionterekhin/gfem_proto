@@ -1,5 +1,6 @@
 package ru.gazpromneft.gfemproto;
 
+
 public interface IMainController {
     String loadModel();
     String loadData();
@@ -8,4 +9,5 @@ public interface IMainController {
     {
         System.exit(0);
     }
+    void about();
 }
