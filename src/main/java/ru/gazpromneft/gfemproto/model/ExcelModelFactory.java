@@ -15,21 +15,21 @@ public class ExcelModelFactory {
 
     private static Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
-    public static ExcelModel fromFile(File file) throws ModelCreationException, ModelValidationException {
+    public static ExcelModel fromFile(File file) throws ModelLoadException, ModelValidationException {
         try {
             String path = file.getAbsolutePath();
             InputStream fis = new FileInputStream(path);
             Workbook wb;
             if (path.endsWith(".xlsx") || path.endsWith(".xls")) {
                 wb = WorkbookFactory.create(fis);
-            } else throw new ModelCreationException("Неизвестное расширение файла (допустимые - .xlsx и .xls)!");
-            return new ExcelModel(wb);
+            } else throw new ModelLoadException("Неизвестное расширение файла (допустимые - .xlsx и .xls)!");
+            return new ExcelModel(file.getName(), wb);
         } catch (IOException exception) {
             logger.log(Level.SEVERE, "Cannot open file!");
-            throw new ModelCreationException("Невозможно прочитать файл!");
+            throw new ModelLoadException("Невозможно прочитать файл!");
         } catch (EncryptedDocumentException exception) {
             logger.log(Level.SEVERE, "The file is encrypted!");
-            throw new ModelCreationException("Файл зашифрован!");
+            throw new ModelLoadException("Файл зашифрован!");
         }
     }
 }

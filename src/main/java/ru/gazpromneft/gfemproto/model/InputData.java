@@ -1,15 +1,21 @@
 package ru.gazpromneft.gfemproto.model;
 
-import java.lang.reflect.Type;
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
-public class InputData {
-    public InputData(HashMap<String, Object> map) {
-
+public class InputData implements Serializable {
+    private String name;
+    private final Map<String, Object> data;
+    public InputData(String name, HashMap<String, Object> data) {
+        this.name = name;
+        this.data = data;
     }
 
-    public HashMap<String, Type> getDescriptor() {
-        return null;
+    public HashMap<String, Class<?>> getDescriptor() {
+        HashMap<String, Class<?>> typeHashMap = new HashMap<>();
+        data.forEach((String k, Object v) -> typeHashMap.put(k, v.getClass()));
+        return typeHashMap;
     }
 
     public void release() {
@@ -20,4 +26,16 @@ public class InputData {
 //    }
 //
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public Map<String, Object> asMap() {
+        return data;
+    }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
 }

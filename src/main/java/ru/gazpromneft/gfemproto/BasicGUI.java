@@ -1,4 +1,4 @@
-package ru.gazpromneft.gfemproto.model;
+package ru.gazpromneft.gfemproto;
 
 import ru.gazpromneft.gfemproto.TinyGUI;
 
@@ -8,10 +8,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BasicGUI extends JFrame {
+    protected Logger logger;
+    public BasicGUI() {
+        logger = Logger.getLogger(this.getClass().getName());
+    }
 
     protected final JFileChooser fc = new JFileChooser();
     public static void updateLookAndFeel() {
-        Logger logger = Logger.getLogger(TinyGUI.class.getName());
+        Logger logger = Logger.getLogger(BasicGUI.class.getName());
         try {
             logger.log(Level.INFO, "Trying to install system look and feel...");
             logger.log(Level.INFO, "Installing " + UIManager.getSystemLookAndFeelClassName() + " look and feel");

@@ -3,7 +3,6 @@ package ru.gazpromneft.gfemproto;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import ru.gazpromneft.gfemproto.model.BasicGUI;
 
 import java.awt.*;
 import javax.swing.*;
@@ -38,7 +37,7 @@ public class TinyGUI extends BasicGUI {
         btnExit.addActionListener((actionEvent) -> controller.exit());
         btnCalculate.addActionListener((actionEvent) -> controller.calculate());
         btnModel.addActionListener((actionEvent) -> txtModel.setText(controller.loadModel()));
-        btnData.addActionListener((actionEvent) -> txtData.setText(controller.loadData()));
+        btnData.addActionListener((actionEvent) -> txtData.setText(controller.loadCase()));
         setVisible(true);
     }
 

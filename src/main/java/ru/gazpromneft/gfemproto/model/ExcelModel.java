@@ -4,6 +4,7 @@ import org.apache.poi.ss.formula.eval.NotImplementedException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,18 +12,20 @@ import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-public class ExcelModel {
+public class ExcelModel implements Serializable {
     private static Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
     private InputData inputData;
     private final Workbook model;
     private final FormulaEvaluator formulaEvaluator;
+    private String name;
 
-    public ExcelModel(Workbook workbook) throws ModelValidationException {
+    public ExcelModel(String name, Workbook workbook) throws ModelValidationException {
+        this.name = name;
         validate(workbook);
         try {
-            inputData = extractInputData(workbook);
-        } catch (InputDataCreationException e) {
+            inputData = extractInputData(name, workbook);
+        } catch (InputDataLoadException e) {
             logger.log(Level.SEVERE, "Эта ветвь не должна выполняться");
         }
         model = workbook;
@@ -95,8 +98,8 @@ public class ExcelModel {
         }
     }
 
-    private InputData extractInputData(Workbook workbook) throws InputDataCreationException {
-        return InputDataFactory.fromSheet(workbook.getSheet("input"));
+    private InputData extractInputData(String name, Workbook workbook) throws InputDataLoadException {
+        return InputDataFactory.fromSheet(name, workbook.getSheet("input"));
     }
 
     public void calculate() {
@@ -134,5 +137,14 @@ public class ExcelModel {
 
     public void release() {
 
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public void changeName(String name) {
+        this.name = name;
     }
 }
