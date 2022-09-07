@@ -5,16 +5,14 @@ import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
+import ru.gazpromneft.gfemproto.gui.GfemGUI;
 import ru.gazpromneft.gfemproto.model.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
 import java.io.*;
 
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,12 +25,15 @@ import java.util.logging.Logger;
 
 public class App implements IMainController {
 
+    private final Object EMPTY_MODEL = Conventions.EMPTY_MODEL;
+
     private final GfemGUI mf;
     private ExcelModel model;
     private InputData data;
     private final Logger logger;
     protected FormulaEvaluator formulaEvaluator;
     private DefaultMutableTreeNode selectedNode;
+    private boolean comboBoxLock;
 
     public App() {
         GfemGUI.updateLookAndFeel();
@@ -40,15 +41,23 @@ public class App implements IMainController {
         tryRegisterSLN();
         mf = new GfemGUI(this);
         mf.setTreeModel(new ExcelTreeModel());
-        try {
-            mf.setTreeModel(loadState());
-        } catch (IOException e) {
-            mf.showError("Нет файла с предыдущим состоянием модели!");
-            mf.setTreeModel(new ExcelTreeModel());
-        } catch (ClassNotFoundException e) {
-            mf.showError("Файл состояния поврежден!");
-            mf.setTreeModel(new ExcelTreeModel());
+        clearComboBox();
+        if (loadStateExists()) {
+            try {
+                mf.setTreeModel(loadState());
+            } catch (IOException e) {
+                mf.showError("Файл состояния повержден и не может быть восстановлен!");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                mf.setTreeModel(new ExcelTreeModel());
+                mf.setComboboxValues(EMPTY_MODEL);
+            } catch (ClassNotFoundException e) {
+                mf.showError("Файл состояния предназначен для другой версии программы!");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                mf.setTreeModel(new ExcelTreeModel());
+                mf.setComboboxValues(EMPTY_MODEL);
+            }
         }
+        mf.setVisible(true);
     }
 
 
@@ -115,23 +124,7 @@ public class App implements IMainController {
     }
 
 
-    private void updateModelWithData(Workbook model, Workbook data) {
-        Sheet dataSheet = data.getSheetAt(0);
-        Sheet modelDataSheet = model.getSheet("input");
 
-        for (Row r : dataSheet) {
-            for (Cell sourceCell : r) {
-                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
-                        .getCell(sourceCell.getColumnIndex());
-                switch (sourceCell.getCellType()) {
-                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
-                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
-                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
-                    case BLANK -> targetCell.setBlank();
-                }
-            }
-        }
-    }
 
     @Override
     public String loadModel() {
@@ -143,13 +136,38 @@ public class App implements IMainController {
             if (((ExcelTreeModel)mf.getTreeModel()).modelsContain(model))
                 throw new ModelLoadException("Выбранная модель уже загружена!");
             ((ExcelTreeModel)mf.getTreeModel()).addModelNode(model);
+            showAllModelsInComboBox();
             return modelFile.getAbsolutePath();
         } catch (ModelLoadException | ModelValidationException e) {
+            logger.warning(e.getMessage());
             mf.showError(e.getMessage());
             return "";
         }
     }
 
+    private void showAllModelsInComboBox() {
+        comboBoxLock = true;
+        Object selected = mf.getComboboxSelected();
+        List<Object> values = ((ExcelTreeModel) mf.getTreeModel()).getModels();
+        values.add(EMPTY_MODEL);
+        mf.setComboboxValues(values.toArray());
+        setComboboxSelected(selected);
+        comboBoxLock = false;
+    }
+
+
+    private void clearComboBox() {
+        comboBoxLock = true;
+        List<Object> values = new ArrayList<>();
+        mf.setComboboxValues(values.toArray());
+        comboBoxLock = false;
+    }
+
+    private void setComboboxSelected(Object value) {
+        comboBoxLock = true;
+        mf.setComboboxSelected(value);
+        comboBoxLock = false;
+    }
 
     @Override
     public String loadCase() {
@@ -163,6 +181,7 @@ public class App implements IMainController {
             ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(data);
             return dataFile.getAbsolutePath();
         } catch (InputDataLoadException e) {
+            logger.warning(e.getMessage());
             mf.showError(e.getMessage());
             return "";
         }
@@ -178,13 +197,14 @@ public class App implements IMainController {
             saveState();
         } catch (Exception e) {
             mf.showError("Невозможно сохранить модели и данные в файл!");
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
         System.exit(0);
     }
 
     @Override
     public void about() {
-        mf.showInfo("Apache POI Demo\nWritten by Terekhin Rodion");
+        mf.showInfo(Conventions.ABOUT_MESSAGE);
     }
 
     @Override
@@ -199,8 +219,38 @@ public class App implements IMainController {
         selectedNode = (DefaultMutableTreeNode) selectedObject;
         Object uncastObject = selectedNode.getUserObject();
         if (uncastObject instanceof InputData selected) {
+            showAllModelsInComboBox();
             for(Entry<String, Object> e: selected.asMap().entrySet()) {
-                mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                if (e.getValue() instanceof Number)
+                    mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                else if (e.getValue() instanceof HashMap<?, ?>)
+                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) e.getValue());
+            }
+            Object shouldSelect = selected.getAttachedModel();
+            if (Objects.isNull(shouldSelect))
+                shouldSelect = EMPTY_MODEL;
+            setComboboxSelected(shouldSelect);
+        } else {
+            clearComboBox();
+        }
+
+    }
+
+    @Override
+    public void changedModel() {
+        if (comboBoxLock)
+            return;
+        logger.log(Level.INFO, "Combobox action performed");
+        if (selectedNode != null) {
+            Object uncastObject = selectedNode.getUserObject();
+            if (uncastObject instanceof InputData selected) {
+                if (Objects.isNull(mf.getComboboxSelected()))
+                    return;
+                if (mf.getComboboxSelected().equals(EMPTY_MODEL)) {
+                    selected.attachModel(null);
+                } else {
+                    selected.attachModel((ExcelModel) mf.getComboboxSelected());
+                }
             }
         }
     }
@@ -235,16 +285,24 @@ public class App implements IMainController {
     }
 
     private void saveState() throws IOException {
+        logger.info("Started saving state");
         FileOutputStream outputStream = new FileOutputStream(Conventions.STATE_FILE_NAME);
+        logger.info("Created file output stream");
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-
+        logger.info("Created object output stream");
         // сохраняем дерево в файл
         objectOutputStream.writeObject(mf.getTreeModel());
+        logger.info("Saved tree model to output stream");
 
         //закрываем поток и освобождаем ресурсы
         objectOutputStream.close();
+        logger.info("Closed output stream");
     }
 
+    private boolean loadStateExists() {
+        File f = new File(Conventions.STATE_FILE_NAME);
+        return f.exists();
+    }
     private ExcelTreeModel loadState() throws IOException, ClassNotFoundException {
         FileInputStream fileInputStream = new FileInputStream(Conventions.STATE_FILE_NAME);
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);

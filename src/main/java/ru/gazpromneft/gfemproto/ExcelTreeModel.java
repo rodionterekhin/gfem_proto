@@ -5,7 +5,9 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 
 public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
@@ -84,5 +86,20 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
         } else {
             throw new IllegalArgumentException("Node not registered!");
         }
+    }
+
+    public List<Object> getModels() {
+        return getObjects(modelsNode);
+    }
+
+    public List<Object> getCases() {
+        return getObjects(casesNode);
+    }
+
+    protected List<Object> getObjects(DefaultMutableTreeNode treeNode) {
+        List<Object> list = new ArrayList<>();
+        treeNode.children().asIterator().forEachRemaining((tn) ->
+                list.add(((DefaultMutableTreeNode)tn).getUserObject()));
+        return list;
     }
 }

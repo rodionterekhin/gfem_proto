@@ -3,6 +3,8 @@ package ru.gazpromneft.gfemproto.model;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import ru.gazpromneft.gfemproto.Conventions;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +32,28 @@ public class ExcelModelFactory {
         } catch (EncryptedDocumentException exception) {
             logger.log(Level.SEVERE, "The file is encrypted!");
             throw new ModelLoadException("Файл зашифрован!");
+        }
+    }
+
+    public static ExcelModel emptyModel() {
+        String name = Conventions.EMPTY_MODEL;
+        Workbook wb = new XSSFWorkbook();
+        try {
+            return new ExcelModel(name, wb) {
+
+                @Override
+                protected void validate(Workbook workbook) {
+                    return;
+                }
+
+                @Override
+                public void calculate() {
+                    return;
+                }
+            };
+        } catch (ModelValidationException e) {
+            assert false;
+            return null;
         }
     }
 }
