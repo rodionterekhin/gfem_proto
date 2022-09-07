@@ -20,7 +20,7 @@ public class ExcelModel implements Serializable {
     protected final SerializableWorkbook workbook;
 
     protected String name;
-    protected CalculationListener listener;
+    protected transient CalculationListener listener;
 
     public ExcelModel(String name, Workbook workbook) throws ModelValidationException {
         this.name = name;
@@ -105,27 +105,28 @@ public class ExcelModel implements Serializable {
         return InputDataFactory.fromSheet(name, workbook.getSheet("input"));
     }
 
-    private void updateModelWithData(Workbook model, Workbook data) {
-        Sheet dataSheet = data.getSheetAt(0);
-        Sheet modelDataSheet = model.getSheet("input");
-
-        for (Row r : dataSheet) {
-            for (Cell sourceCell : r) {
-                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
-                        .getCell(sourceCell.getColumnIndex());
-                switch (sourceCell.getCellType()) {
-                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
-                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
-                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
-                    case BLANK -> targetCell.setBlank();
-                }
-            }
-        }
+    private void updateModelWithData(Workbook model, InputData data) {
+        // TODO implement model filling with data
+//        Sheet dataSheet = data.getSheetAt(0);
+//        Sheet modelDataSheet = model.getSheet("input");
+//
+//        for (Row r : dataSheet) {
+//            for (Cell sourceCell : r) {
+//                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
+//                        .getCell(sourceCell.getColumnIndex());
+//                switch (sourceCell.getCellType()) {
+//                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
+//                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
+//                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
+//                    case BLANK -> targetCell.setBlank();
+//                }
+//            }
+//        }
     }
 
     protected void calculate() {
         FormulaEvaluator formulaEvaluator = this.workbook.get().getCreationHelper().createFormulaEvaluator();
-        //updateModelWithData(this.workbook.get(), inputData);
+        updateModelWithData(this.workbook.get(), inputData);
         formulaEvaluator.clearAllCachedResultValues();
         long load_time = System.nanoTime();
         formulaEvaluator.evaluateAll();

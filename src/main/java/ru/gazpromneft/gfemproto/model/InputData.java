@@ -11,6 +11,7 @@ public class InputData implements Serializable {
     private String name;
     private final Map<String, Object> data;
     private ExcelModel attachedModel;
+    private OutputData calculationResult;
     public InputData(String name, HashMap<String, Object> data) {
         this.name = name;
         this.data = data;
