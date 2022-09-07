@@ -3,6 +3,8 @@ package ru.gazpromneft.gfemproto.model;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbook;
+import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbookFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
@@ -13,26 +15,27 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 public class ExcelModel implements Serializable {
-    private static Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
-    private InputData inputData;
-    private final Workbook model;
-    private final FormulaEvaluator formulaEvaluator;
-    private String name;
+    protected InputData inputData;
+    protected final SerializableWorkbook workbook;
+
+    protected String name;
+    protected CalculationListener listener;
 
     public ExcelModel(String name, Workbook workbook) throws ModelValidationException {
         this.name = name;
+        listener = null;
         validate(workbook);
         try {
             inputData = extractInputData(name, workbook);
         } catch (InputDataLoadException e) {
-            logger.log(Level.SEVERE, "Эта ветвь не должна выполняться");
+            assert false;
         }
-        model = workbook;
-        formulaEvaluator = workbook.getCreationHelper().createFormulaEvaluator();
+        this.workbook = SerializableWorkbookFactory.fromWorkbook(workbook);
+
     }
 
-    private void validate(Workbook workbook) throws ModelValidationException {
+    protected void validate(Workbook workbook) throws ModelValidationException {
 
         boolean localCorrect;
         boolean overallCorrect = true;
@@ -98,18 +101,46 @@ public class ExcelModel implements Serializable {
         }
     }
 
-    private InputData extractInputData(String name, Workbook workbook) throws InputDataLoadException {
+    protected InputData extractInputData(String name, Workbook workbook) throws InputDataLoadException {
         return InputDataFactory.fromSheet(name, workbook.getSheet("input"));
     }
 
-    public void calculate() {
-        //loadDataIntoModel(inputData, model);
+    private void updateModelWithData(Workbook model, Workbook data) {
+        Sheet dataSheet = data.getSheetAt(0);
+        Sheet modelDataSheet = model.getSheet("input");
+
+        for (Row r : dataSheet) {
+            for (Cell sourceCell : r) {
+                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
+                        .getCell(sourceCell.getColumnIndex());
+                switch (sourceCell.getCellType()) {
+                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
+                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
+                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
+                    case BLANK -> targetCell.setBlank();
+                }
+            }
+        }
+    }
+
+    protected void calculate() {
+        FormulaEvaluator formulaEvaluator = this.workbook.get().getCreationHelper().createFormulaEvaluator();
+        //updateModelWithData(this.workbook.get(), inputData);
         formulaEvaluator.clearAllCachedResultValues();
         long load_time = System.nanoTime();
         formulaEvaluator.evaluateAll();
-        logger.log(Level.INFO,
-                String.format("Workbook evaluation time is: %f mS%n",
-                              (double) (System.nanoTime() - load_time) / 1e6));
+        Logger.getLogger(this.getClass().getName()).log(Level.INFO,
+                String.format("Workbook evaluation time is: %f mS",
+                              (System.nanoTime() - load_time) / 1e6));
+        notifyListener();
+    }
+
+    private void notifyListener() {
+        listener.onCalculationDone();
+    }
+
+    public void setListener(CalculationListener listener) {
+        this.listener = listener;
     }
 
     public void getResults() {

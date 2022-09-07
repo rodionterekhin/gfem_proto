@@ -1,6 +1,4 @@
-package ru.gazpromneft.gfemproto;
-
-import ru.gazpromneft.gfemproto.TinyGUI;
+package ru.gazpromneft.gfemproto.gui;
 
 import javax.swing.*;
 import java.io.File;

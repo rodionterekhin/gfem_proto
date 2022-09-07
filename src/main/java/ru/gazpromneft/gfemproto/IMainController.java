@@ -14,4 +14,6 @@ public interface IMainController {
     void treeSelectionChanged(Object lastSelectedPathComponent);
     void deleteNode();
     void duplicateNode();
+
+    void changedModel();
 }

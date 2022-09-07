@@ -1,8 +1,9 @@
-package ru.gazpromneft.gfemproto;
+package ru.gazpromneft.gfemproto.gui;
 
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import ru.gazpromneft.gfemproto.IMainController;
 
 import java.awt.*;
 import javax.swing.*;
