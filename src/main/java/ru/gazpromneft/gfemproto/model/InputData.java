@@ -63,14 +63,4 @@ public class InputData implements Serializable {
         this.name = name;
     }
 
-    public void calculate(CalculationListener listener) {
-        if (attachedModel != null) {
-            attachedModel.setListener(listener);
-            String msg = "Calculating \"" + name + "\" using model \"" + attachedModel.name + "\"";
-            Logger.getLogger(this.getClass().getName()).info(msg);
-            attachedModel.setData(this);
-            attachedModel.calculate();
-        }
-    }
-
 }

@@ -20,11 +20,9 @@ public class ExcelModel implements Serializable {
     protected final SerializableWorkbook workbook;
 
     protected String name;
-    protected transient CalculationListener listener;
 
     public ExcelModel(String name, Workbook workbook) throws ModelValidationException {
         this.name = name;
-        listener = null;
         validate(workbook);
         try {
             inputData = extractInputData(name, workbook);
@@ -124,7 +122,7 @@ public class ExcelModel implements Serializable {
 //        }
     }
 
-    protected void calculate() {
+    protected OutputData calculate() {
         FormulaEvaluator formulaEvaluator = this.workbook.get().getCreationHelper().createFormulaEvaluator();
         updateModelWithData(this.workbook.get(), inputData);
         formulaEvaluator.clearAllCachedResultValues();
@@ -133,15 +131,7 @@ public class ExcelModel implements Serializable {
         Logger.getLogger(this.getClass().getName()).log(Level.INFO,
                 String.format("Workbook evaluation time is: %f mS",
                               (System.nanoTime() - load_time) / 1e6));
-        notifyListener();
-    }
-
-    private void notifyListener() {
-        listener.onCalculationDone();
-    }
-
-    public void setListener(CalculationListener listener) {
-        this.listener = listener;
+        return new OutputData();
     }
 
     public void getResults() {

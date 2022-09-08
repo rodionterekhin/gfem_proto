@@ -47,8 +47,8 @@ public class ExcelModelFactory {
                 }
 
                 @Override
-                public void calculate() {
-                    return;
+                public OutputData calculate() {
+                    return null;
                 }
             };
         } catch (ModelValidationException e) {

@@ -13,6 +13,9 @@ import java.io.*;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -189,12 +192,28 @@ public class App implements IMainController {
         if (selectedNode != null) {
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
             InputData dataToCalculate = (InputData) selectedNode.getUserObject();
-            dataToCalculate.calculate(() -> this.calculated(dataToCalculate));
+            CalculationSchema calculationSchema = new CalculationSchema(dataToCalculate);
+            Supplier<CalculationSchema> calculationSupplier = () -> {
+                logger.info("Scheduled calculation for schema " + calculationSchema);
+                return Calculator.calculate(calculationSchema);
+            };
+            CompletableFuture.supplyAsync(calculationSupplier).exceptionally(this::onCalculationError).thenAccept(this::onCalculated);
         }
     }
 
-    private void calculated(InputData caller) {
-        logger.info("Calculation done for model \"" + caller + "\"");
+    private CalculationSchema onCalculationError(Throwable throwable) {
+        CalculationError error = (CalculationError) throwable;
+        logger.info("Error occured during calculation of schema " + error.getSchema() + "");
+        logger.log(Level.SEVERE, error.getMessage(), error.getTrueReason());
+        return error.getSchema();
+    }
+
+    private void onCalculated(CalculationSchema schema) {
+        if (!schema.isCompleted()) {
+            logger.info("Schema " + schema + " not completed");
+            return;
+        }
+        logger.info("Calculation done for schema " + schema + "");
     }
 
     public void exit() {

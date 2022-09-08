@@ -4,4 +4,8 @@ import java.io.Serializable;
 
 public class OutputData implements Serializable {
 
+
+    protected OutputData() {
+
+    }
 }
