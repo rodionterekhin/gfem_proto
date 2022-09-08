@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class ExcelModelFactory {
 
-    private static Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
+    private static final Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
     public static ExcelModel fromFile(File file) throws ModelLoadException, ModelValidationException {
         try {
@@ -43,7 +43,6 @@ public class ExcelModelFactory {
 
                 @Override
                 protected void validate(Workbook workbook) {
-                    return;
                 }
 
                 @Override

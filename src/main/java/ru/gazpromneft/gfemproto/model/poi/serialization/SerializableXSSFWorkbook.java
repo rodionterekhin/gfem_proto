@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 
 public class SerializableXSSFWorkbook extends SerializableWorkbook implements Serializable {
 
-    protected SerializableXSSFWorkbook(Workbook workbook) {
+    protected SerializableXSSFWorkbook(XSSFWorkbook workbook) {
         super(workbook);
     }
 

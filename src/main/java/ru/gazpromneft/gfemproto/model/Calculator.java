@@ -1,6 +1,5 @@
 package ru.gazpromneft.gfemproto.model;
 
-// TODO public class ThreadedCalculator
 public class Calculator {
     public static CalculationSchema calculate(CalculationSchema schema) throws CalculationError {
         try {
@@ -11,10 +10,5 @@ public class Calculator {
             throw new CalculationError(e, schema);
         }
     }
-
-    private static void calculationWorker() {
-        // TODO Consider java.util.concurrent.Future usage
-    }
-
 
 }

@@ -1,11 +1,11 @@
 package ru.gazpromneft.gfemproto.model;
 
-import javax.swing.*;
 import java.io.Serializable;
 
 public class CalculationSchema implements Serializable {
-    protected ExcelModel model;
-    protected InputData data;
+    protected final ExcelModel model;
+    protected final InputData data;
+    // In the future, we can customize schema by adding following lines:
     // Macroparameters macroparameters;
     // Parameters parameters;
     protected OutputData result;
@@ -29,7 +29,7 @@ public class CalculationSchema implements Serializable {
         this.result = result;
     }
 
-    public OutputData getResult(OutputData result) {
+    public OutputData getResult() {
         return result;
     }
 

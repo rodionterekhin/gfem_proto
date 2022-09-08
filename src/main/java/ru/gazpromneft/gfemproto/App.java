@@ -14,7 +14,6 @@ import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,8 +30,6 @@ public class App implements IMainController {
     private final Object EMPTY_MODEL = Conventions.EMPTY_MODEL;
 
     private final GfemGUI mf;
-    private ExcelModel model;
-    private InputData data;
     private final Logger logger;
     protected FormulaEvaluator formulaEvaluator;
     private DefaultMutableTreeNode selectedNode;
@@ -137,8 +134,29 @@ public class App implements IMainController {
             if (((ExcelTreeModel)mf.getTreeModel()).modelsContain(model))
                 throw new ModelLoadException("Выбранная модель уже загружена!");
             ((ExcelTreeModel)mf.getTreeModel()).addModelNode(model);
+            showAllModelsInComboBox();
+            mf.setStatus("Загружена модель " + model);
             return modelFile.getAbsolutePath();
         } catch (ModelLoadException | ModelValidationException e) {
+            logger.warning(e.getMessage());
+            mf.showError(e.getMessage());
+            return "";
+        }
+    }
+
+    @Override
+    public String loadCase() {
+        File dataFile = mf.openFileDialog();
+        if (Objects.isNull(dataFile))
+            return "";
+        try {
+            InputData data = InputDataFactory.fromFile(dataFile);
+            if (((ExcelTreeModel)mf.getTreeModel()).casesContain(data))
+                throw new InputDataLoadException("Данные уже были загружены!");
+            ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(data);
+            mf.setStatus("Загружен кейс " + data);
+            return dataFile.getAbsolutePath();
+        } catch (InputDataLoadException e) {
             logger.warning(e.getMessage());
             mf.showError(e.getMessage());
             return "";
@@ -158,8 +176,7 @@ public class App implements IMainController {
 
     private void clearComboBox() {
         comboBoxLock = true;
-        List<Object> values = new ArrayList<>();
-        mf.setComboboxValues(values.toArray());
+        mf.setComboboxValues();
         comboBoxLock = false;
     }
 
@@ -170,24 +187,6 @@ public class App implements IMainController {
     }
 
     @Override
-    public String loadCase() {
-        File dataFile = mf.openFileDialog();
-        if (Objects.isNull(dataFile))
-            return "";
-        try {
-            InputData data = InputDataFactory.fromFile(dataFile);
-            if (((ExcelTreeModel)mf.getTreeModel()).casesContain(data))
-                throw new InputDataLoadException("Данные уже были загружены!");
-            ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(data);
-            return dataFile.getAbsolutePath();
-        } catch (InputDataLoadException e) {
-            logger.warning(e.getMessage());
-            mf.showError(e.getMessage());
-            return "";
-        }
-    }
-
-    @Override
     public void calculate() {
         if (selectedNode != null) {
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
@@ -195,6 +194,7 @@ public class App implements IMainController {
             CalculationSchema calculationSchema = new CalculationSchema(dataToCalculate);
             Supplier<CalculationSchema> calculationSupplier = () -> {
                 logger.info("Scheduled calculation for schema " + calculationSchema);
+                mf.setStatus("Выполняю расчет " + calculationSchema);
                 return Calculator.calculate(calculationSchema);
             };
             CompletableFuture.supplyAsync(calculationSupplier).exceptionally(this::onCalculationError).thenAccept(this::onCalculated);
@@ -204,6 +204,7 @@ public class App implements IMainController {
     private CalculationSchema onCalculationError(Throwable throwable) {
         CalculationError error = (CalculationError) throwable;
         logger.info("Error occured during calculation of schema " + error.getSchema() + "");
+        mf.setStatus("При расчете схемы " + error.getSchema() + " произошла ошибка");
         logger.log(Level.SEVERE, error.getMessage(), error.getTrueReason());
         return error.getSchema();
     }
@@ -214,6 +215,9 @@ public class App implements IMainController {
             return;
         }
         logger.info("Calculation done for schema " + schema + "");
+        mf.setStatus("Расчет " + schema + " выполнен");
+        // TODO result display in GUI
+        mf.showInfo(schema.getResult().getTextReport());
     }
 
     public void exit() {
@@ -237,6 +241,7 @@ public class App implements IMainController {
         mf.clearInputEntries();
         mf.clearOutputEntries();
         if (Objects.isNull(selectedObject)) {
+            clearComboBox();
             selectedNode = null;
             return;
         }
@@ -247,8 +252,8 @@ public class App implements IMainController {
             for(Entry<String, Object> e: selected.asMap().entrySet()) {
                 if (e.getValue() instanceof Number)
                     mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
-                else if (e.getValue() instanceof HashMap<?, ?>)
-                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) e.getValue());
+                else if (e.getValue() instanceof HashMap<?, ?> hashMap)
+                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) hashMap);
             }
             Object shouldSelect = selected.getAttachedModel();
             if (Objects.isNull(shouldSelect))

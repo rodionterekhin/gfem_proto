@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BasicGUI extends JFrame {
-    protected Logger logger;
+    protected final Logger logger;
     public BasicGUI() {
         logger = Logger.getLogger(this.getClass().getName());
     }

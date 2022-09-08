@@ -3,16 +3,23 @@ package ru.gazpromneft.gfemproto.model;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellRangeUtil;
+import org.apache.poi.ss.util.CellUtil;
+import org.apache.poi.ss.util.SheetUtil;
+import ru.gazpromneft.gfemproto.Conventions;
 import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbook;
 import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbookFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+
+import ru.gazpromneft.gfemproto.model.IndexedUtils;
 
 public class ExcelModel implements Serializable {
 
@@ -36,7 +43,7 @@ public class ExcelModel implements Serializable {
     protected void validate(Workbook workbook) throws ModelValidationException {
 
         boolean localCorrect;
-        boolean overallCorrect = true;
+        boolean overallCorrect;
         StringBuilder errorMessage = new StringBuilder();
         errorMessage.append("Несоответствие формату:");
 
@@ -103,35 +110,74 @@ public class ExcelModel implements Serializable {
         return InputDataFactory.fromSheet(name, workbook.getSheet("input"));
     }
 
-    private void updateModelWithData(Workbook model, InputData data) {
-        // TODO implement model filling with data
-//        Sheet dataSheet = data.getSheetAt(0);
-//        Sheet modelDataSheet = model.getSheet("input");
-//
-//        for (Row r : dataSheet) {
-//            for (Cell sourceCell : r) {
-//                Cell targetCell = modelDataSheet.getRow(r.getRowNum())
-//                        .getCell(sourceCell.getColumnIndex());
-//                switch (sourceCell.getCellType()) {
-//                    case FORMULA -> targetCell.setCellFormula(sourceCell.getCellFormula());
-//                    case STRING -> targetCell.setCellValue(sourceCell.getStringCellValue());
-//                    case NUMERIC -> targetCell.setCellValue(sourceCell.getNumericCellValue());
-//                    case BLANK -> targetCell.setBlank();
-//                }
-//            }
-//        }
+    private void updateModelWithData(InputData data) {
+
+        List<Double> currentIndex;
+
+        Sheet modelDataSheet = this.workbook.get().getSheet("input");
+
+        // Clear cell contents - move to another function
+        for (Row r : modelDataSheet) {
+            if (r.getRowNum() == 0)
+                continue;
+            for (Cell c : r) {
+                if (c.getColumnIndex() <= 2)
+                    continue;
+                SheetUtil.getCell(modelDataSheet,r.getRowNum(), c.getColumnIndex()).setBlank();
+            }
+        }
+
+        for (Row r : modelDataSheet) {
+            String typeString = r.getCell(0).getStringCellValue();
+            String name = r.getCell(1).getStringCellValue();
+            if (typeString.equals("") && name.equals(""))
+                continue;
+
+            Conventions.VariableType type = Conventions.VariableType.fromText(typeString);
+            assert !Objects.isNull(type);  // Мы уже прошли валидацию книги, все типы должны быть в порядке
+            if (type == Conventions.VariableType.NUMERIC) {
+                r.getCell(2).setCellValue((Double) data.asMap().get(name));
+            }
+            else if (type == Conventions.VariableType.INDEX) {
+                currentIndex = IndexedUtils.parseArray(r);
+            }
+            else if (type == Conventions.VariableType.ARRAY) {
+                Object value = data.asMap().get(name);
+                if (value instanceof Map<Double, Double>) {
+                    Map<Double, Double> values = (Map<Double, Double>);
+                    IndexedUtils.fillArray(currentIndex, r);
+                }
+            }
+        }
     }
 
     protected OutputData calculate() {
         FormulaEvaluator formulaEvaluator = this.workbook.get().getCreationHelper().createFormulaEvaluator();
-        updateModelWithData(this.workbook.get(), inputData);
+        updateModelWithData(inputData);
         formulaEvaluator.clearAllCachedResultValues();
         long load_time = System.nanoTime();
         formulaEvaluator.evaluateAll();
         Logger.getLogger(this.getClass().getName()).log(Level.INFO,
                 String.format("Workbook evaluation time is: %f mS",
                               (System.nanoTime() - load_time) / 1e6));
-        return new OutputData();
+
+        Sheet output = this.workbook.get().getSheet("output");
+
+        StringBuilder report = new StringBuilder();
+        for (Row r : output) {
+            if (r.getRowNum() == 0)
+                continue;
+            String outputType = r.getCell(0).getStringCellValue();
+            String outputName = r.getCell(1).getStringCellValue();
+            double outputValue = r.getCell(2).getNumericCellValue();
+            report.append(outputName)
+                    .append(" = ")
+                    .append(outputValue)
+                    .append("\n");
+        }
+        OutputData result = new OutputData();
+        result.setTextReport(report.toString());
+        return result;
     }
 
     public void getResults() {

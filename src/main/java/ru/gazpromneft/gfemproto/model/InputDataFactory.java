@@ -5,7 +5,6 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
 import ru.gazpromneft.gfemproto.Conventions;
 
-import javax.print.attribute.standard.JobKOctets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -15,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class InputDataFactory {
-    private static Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
+    private static final Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
     public static InputData fromFile(File file) throws InputDataLoadException {
         try {
@@ -60,18 +59,17 @@ public class InputDataFactory {
                 parseResult.put(name, r.getCell(2).getNumericCellValue());
             }
             else if (type == Conventions.VariableType.INDEX) {
-                currentIndex = parseArray(r);
+                currentIndex = IndexedUtils.parseArray(r);
             }
             else if (type == Conventions.VariableType.ARRAY) {
                 HashMap<Double, Double> array = new HashMap<>();
-                List<Double> finalData = parseArray(r);
+                List<Double> finalData = IndexedUtils.parseArray(r);
                 if (Objects.isNull(currentIndex)) {
-                    StringBuilder msg = new StringBuilder();
-                    msg.append("Строка ")
-                            .append(r.getRowNum() + 1)
-                            .append(":\n")
-                            .append("Массив не может идти перед индексом!");
-                    throw new InputDataLoadException(msg.toString());
+                    String msg = "Строка " +
+                            (r.getRowNum() + 1) +
+                            ":\n" +
+                            "Массив не может идти перед индексом!";
+                    throw new InputDataLoadException(msg);
                 }
                 List<Double> finalCurrentIndex = currentIndex;
                 currentIndex.forEach((k) ->
@@ -84,15 +82,7 @@ public class InputDataFactory {
         return parseResult;
     }
 
-    private static List<Double> parseArray(Row r) {
-        List<Double> ret = new ArrayList<>();
-        for (Cell c : r) {
-            if (c.getColumnIndex() < 2)
-                continue;
-            ret.add(c.getNumericCellValue());
-        }
-        return ret;
-    }
+
 
     private static void validate(Sheet sheet) throws InputDataLoadException {
         Map<String, String> map = new HashMap<>();

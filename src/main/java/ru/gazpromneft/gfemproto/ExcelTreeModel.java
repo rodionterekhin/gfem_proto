@@ -12,8 +12,8 @@ import java.util.List;
 
 public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
 
-    private DefaultMutableTreeNode casesNode;
-    private DefaultMutableTreeNode modelsNode;
+    private final DefaultMutableTreeNode casesNode;
+    private final DefaultMutableTreeNode modelsNode;
 
     public ExcelTreeModel() {
         super(new DefaultMutableTreeNode("Данные проекта"));
@@ -25,22 +25,20 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
 
     }
 
-    public DefaultMutableTreeNode addCaseNode(Object obj) {
+    public void addCaseNode(Object obj) {
         if (casesContain(obj))
             throw new IllegalArgumentException("Node already registered!");
         DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(obj);
         casesNode.add(newNode);
         reload(casesNode);
-        return newNode;
     }
 
-    public DefaultMutableTreeNode addModelNode(Object obj) {
+    public void addModelNode(Object obj) {
         if (modelsContain(obj))
             throw new IllegalArgumentException("Node already registered!");
         DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(obj);
         modelsNode.add(newNode);
         reload(modelsNode);
-        return newNode;
     }
 
     private void deleteCaseNode(MutableTreeNode obj) {
@@ -48,7 +46,6 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
             throw new IllegalArgumentException("Node not registered!");
         casesNode.remove(obj);
         reload(casesNode);
-        return;
     }
 
     private void deleteModelNode(MutableTreeNode obj) {
@@ -56,7 +53,6 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
             throw new IllegalArgumentException("Node not registered!");
         modelsNode.remove(obj);
         reload(modelsNode);
-        return;
     }
 
 
