@@ -3,13 +3,13 @@ package ru.gazpromneft.gfemproto.model;
 import org.apache.poi.ss.formula.eval.NotImplementedException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.ss.util.CellRangeUtil;
-import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.ss.util.SheetUtil;
 import ru.gazpromneft.gfemproto.Conventions;
 import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbook;
 import ru.gazpromneft.gfemproto.model.poi.serialization.SerializableWorkbookFactory;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.HashMap;
@@ -18,8 +18,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-
-import ru.gazpromneft.gfemproto.model.IndexedUtils;
 
 public class ExcelModel implements Serializable {
 
@@ -112,13 +110,16 @@ public class ExcelModel implements Serializable {
 
     private void updateModelWithData(InputData data) {
 
-        List<Double> currentIndex;
+        List<Double> currentIndex = null;
 
         Sheet modelDataSheet = this.workbook.get().getSheet("input");
 
         // Clear cell contents - move to another function
         for (Row r : modelDataSheet) {
             if (r.getRowNum() == 0)
+                continue;
+            Conventions.VariableType type = Conventions.VariableType.fromText(r.getCell(0).getStringCellValue());
+            if (type == Conventions.VariableType.INDEX)
                 continue;
             for (Cell c : r) {
                 if (c.getColumnIndex() <= 2)
@@ -128,6 +129,8 @@ public class ExcelModel implements Serializable {
         }
 
         for (Row r : modelDataSheet) {
+            if (r.getRowNum() == 0)
+                continue;
             String typeString = r.getCell(0).getStringCellValue();
             String name = r.getCell(1).getStringCellValue();
             if (typeString.equals("") && name.equals(""))
@@ -142,10 +145,11 @@ public class ExcelModel implements Serializable {
                 currentIndex = IndexedUtils.parseArray(r);
             }
             else if (type == Conventions.VariableType.ARRAY) {
+                assert currentIndex != null;
                 Object value = data.asMap().get(name);
-                if (value instanceof Map<Double, Double>) {
-                    Map<Double, Double> values = (Map<Double, Double>);
-                    IndexedUtils.fillArray(currentIndex, r);
+                if (value instanceof Map<?, ?> values_uncast) {
+                    Map<Double, Double> values = (Map<Double, Double>) values_uncast;
+                    IndexedUtils.fillArray(r, IndexedUtils.sequenceFromArray(currentIndex, values));
                 }
             }
         }
@@ -175,6 +179,15 @@ public class ExcelModel implements Serializable {
                     .append(outputValue)
                     .append("\n");
         }
+        FileOutputStream out = null;
+        try {
+            out = new FileOutputStream("result"+System.currentTimeMillis() + ".xlsx");
+            this.workbook.get().write(out);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         OutputData result = new OutputData();
         result.setTextReport(report.toString());
         return result;
@@ -184,9 +197,6 @@ public class ExcelModel implements Serializable {
         throw new NotImplementedException("Not implemented yet");
     }
 
-    public InputData getData() {
-        return inputData;
-    }
     public void setData(InputData inputData) {
         this.inputData = inputData;
     }

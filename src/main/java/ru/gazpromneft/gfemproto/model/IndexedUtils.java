@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.Row;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class IndexedUtils {
     protected static List<Double> parseArray(Row r) {
@@ -15,5 +17,16 @@ public class IndexedUtils {
             ret.add(c.getNumericCellValue());
         }
         return ret;
+    }
+
+    protected static void fillArray(Row r, List<Double> array) {
+        AtomicInteger i = new AtomicInteger(2);
+        array.forEach((d) ->
+                r.getCell(i.getAndIncrement(), Row.MissingCellPolicy.CREATE_NULL_AS_BLANK)
+                        .setCellValue(d != null? d : 0));
+    }
+
+    protected static List<Double> sequenceFromArray(List<Double> index, Map<Double, Double> values) {
+        return index.stream().map(values::get).toList();
     }
 }

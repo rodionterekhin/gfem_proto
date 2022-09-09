@@ -31,7 +31,6 @@ public class App implements IMainController {
 
     private final GfemGUI mf;
     private final Logger logger;
-    protected FormulaEvaluator formulaEvaluator;
     private DefaultMutableTreeNode selectedNode;
     private boolean comboBoxLock;
 
@@ -66,52 +65,6 @@ public class App implements IMainController {
             logger.log(Level.INFO, "SLN already registered");
         }
     }
-
-    private boolean calculate(Workbook wb, boolean clearCache) {
-
-        formulaEvaluator = wb.getCreationHelper().createFormulaEvaluator();
-        StringBuilder report = new StringBuilder();
-
-        if (clearCache)
-            formulaEvaluator.clearAllCachedResultValues();
-
-        long load_time = System.nanoTime();
-        formulaEvaluator.evaluateAll();
-
-        System.out.printf("Workbook evaluation time is: %f mS%n", (double) (System.nanoTime() - load_time) / 1e6);
-        Sheet model = wb.getSheet("model");
-
-        for (Row r : model) {
-            for (Cell c : r) {
-                try {
-                    if (c.getCellType() == CellType.FORMULA) {
-                        double a = c.getNumericCellValue();
-                    }
-                }
-                catch (Exception e) {
-                    System.out.println(c.getAddress());
-                }
-            }
-        }
-
-
-        Sheet output = wb.getSheet("output");
-
-        for (Row r : output) {
-            if (r.getRowNum() == 0)
-                continue;
-            String outputType = r.getCell(0).getStringCellValue();
-            String outputName = r.getCell(1).getStringCellValue();
-            double outputValue = r.getCell(2).getNumericCellValue();
-            report.append(outputName)
-                    .append(" = ")
-                    .append(outputValue)
-                    .append("\n");
-        }
-        mf.showInfo(report.toString());
-        return true;
-    }
-
 
     public static void main(String[] args) {
         WorkbookFactory.addProvider(new HSSFWorkbookFactory());
@@ -202,7 +155,7 @@ public class App implements IMainController {
     }
 
     private CalculationSchema onCalculationError(Throwable throwable) {
-        CalculationError error = (CalculationError) throwable;
+        CalculationError error = (CalculationError) throwable.getCause();
         logger.info("Error occured during calculation of schema " + error.getSchema() + "");
         mf.setStatus("При расчете схемы " + error.getSchema() + " произошла ошибка");
         logger.log(Level.SEVERE, error.getMessage(), error.getTrueReason());
