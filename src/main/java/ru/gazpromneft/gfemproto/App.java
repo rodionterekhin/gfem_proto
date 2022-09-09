@@ -1,14 +1,13 @@
 package ru.gazpromneft.gfemproto;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLightLaf;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import ru.gazpromneft.gfemproto.gui.GfemGUI;
+import ru.gazpromneft.gfemproto.gui.IMainController;
 import ru.gazpromneft.gfemproto.model.*;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -17,6 +16,7 @@ import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,8 +73,6 @@ public class App implements IMainController {
     public static void main(String[] args) {
         WorkbookFactory.addProvider(new HSSFWorkbookFactory());
         WorkbookFactory.addProvider(new XSSFWorkbookFactory());
-        for (String a : FunctionEval.getSupportedFunctionNames())
-            System.out.println(a);
         new App();
     }
 
@@ -243,6 +241,15 @@ public class App implements IMainController {
                 }
             }
         }
+    }
+
+    @Override
+    public void available_functions() {
+        final int columnsCount = 5;
+        StringBuilder msg = new StringBuilder("Список поддерживаемых функций:\n");
+        AtomicInteger i = new AtomicInteger(1);
+        FunctionEval.getSupportedFunctionNames().forEach((a) -> msg.append(a).append((i.getAndIncrement()%columnsCount)==0 ?"\n" : ", "));
+        mf.showInfo(msg.substring(0, msg.length() - 2));
     }
 
     @Override

@@ -3,7 +3,6 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import ru.gazpromneft.gfemproto.IMainController;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -43,7 +42,7 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
 
     private JMenuBar menuBar;
     private JMenu mnuFile, mnuEdit;
-    private JMenuItem mniAbout, mniExit;
+    private JMenuItem mniAbout, mniSupportedFunctions, mniExit;
     private JMenuItem mniLoadModel, mniLoadData;
     private HashMap<String, PanelFiller> panelFillers = new HashMap<>();
 
@@ -58,10 +57,13 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         menuBar = new JMenuBar();
         mnuFile = new JMenu("Файл");
         mniAbout = new JMenuItem("О программе");
+        mniSupportedFunctions = new JMenuItem("Поддерживаемые функции");
         mniExit = new JMenuItem("Выход");
         mniExit.addActionListener((ActionEvent ae) -> controller.exit());
         mniAbout.addActionListener((ActionEvent ae) -> controller.about());
+        mniSupportedFunctions.addActionListener((ActionEvent ae) -> controller.available_functions());
         mnuFile.add(mniAbout);
+        mnuFile.add(mniSupportedFunctions);
         mnuFile.add(mniExit);
 
         mnuEdit = new JMenu("Правка");

@@ -1,4 +1,4 @@
-package ru.gazpromneft.gfemproto;
+package ru.gazpromneft.gfemproto.gui;
 
 
 public interface IMainController {
@@ -16,4 +16,6 @@ public interface IMainController {
     void duplicateNode();
 
     void changedModel();
+
+    void available_functions();
 }
