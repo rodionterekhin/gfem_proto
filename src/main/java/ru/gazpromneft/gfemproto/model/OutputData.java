@@ -1,14 +1,16 @@
 package ru.gazpromneft.gfemproto.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 public class OutputData implements Serializable {
 
 
     private String textReport;
+    private HashMap<String, Object> map;
 
-    protected OutputData() {
-
+    protected OutputData(HashMap<String, Object> map) {
+        this.map = map;
     }
 
     protected void setTextReport(String textReport) {
@@ -17,5 +19,9 @@ public class OutputData implements Serializable {
 
     public String getTextReport() {
         return textReport;
+    }
+
+    public HashMap<String, Object> asMap() {
+        return map;
     }
 }

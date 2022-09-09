@@ -155,7 +155,7 @@ public class ExcelModel implements Serializable {
         }
     }
 
-    protected OutputData calculate() {
+    protected OutputData calculate() throws OutputDataCreationException{
         FormulaEvaluator formulaEvaluator = this.workbook.get().getCreationHelper().createFormulaEvaluator();
         updateModelWithData(inputData);
         formulaEvaluator.clearAllCachedResultValues();
@@ -187,8 +187,7 @@ public class ExcelModel implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        OutputData result = new OutputData();
+        OutputData result = OutputDataFactory.fromModel(this);
         result.setTextReport(report.toString());
         return result;
     }

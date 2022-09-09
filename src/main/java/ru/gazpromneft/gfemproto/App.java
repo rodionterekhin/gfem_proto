@@ -1,5 +1,8 @@
 package ru.gazpromneft.gfemproto;
 
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
@@ -35,7 +38,8 @@ public class App implements IMainController {
     private boolean comboBoxLock;
 
     public App() {
-        GfemGUI.updateLookAndFeel();
+        FlatIntelliJLaf.setup();
+        // GfemGUI.updateLookAndFeel();
         logger = Logger.getLogger(this.getClass().getName());
         tryRegisterSLN();
         mf = new GfemGUI(this);
@@ -142,15 +146,18 @@ public class App implements IMainController {
     @Override
     public void calculate() {
         if (selectedNode != null) {
+            if (!(selectedNode.getUserObject() instanceof InputData dataToCalculate))
+                return;
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
-            InputData dataToCalculate = (InputData) selectedNode.getUserObject();
             CalculationSchema calculationSchema = new CalculationSchema(dataToCalculate);
             Supplier<CalculationSchema> calculationSupplier = () -> {
                 logger.info("Scheduled calculation for schema " + calculationSchema);
                 mf.setStatus("Выполняю расчет " + calculationSchema);
                 return Calculator.calculate(calculationSchema);
             };
-            CompletableFuture.supplyAsync(calculationSupplier).exceptionally(this::onCalculationError).thenAccept(this::onCalculated);
+            CompletableFuture.supplyAsync(calculationSupplier)
+                    .exceptionally(this::onCalculationError)
+                    .thenAccept(this::onCalculated);
         }
     }
 
@@ -171,6 +178,7 @@ public class App implements IMainController {
         mf.setStatus("Расчет " + schema + " выполнен");
         // TODO result display in GUI
         mf.showInfo(schema.getResult().getTextReport());
+        logger.info(schema.getResult().asMap().toString());
     }
 
     public void exit() {
