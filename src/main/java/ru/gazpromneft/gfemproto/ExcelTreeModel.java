@@ -26,8 +26,6 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     }
 
     public void addCaseNode(Object obj) {
-        if (casesContain(obj))
-            throw new IllegalArgumentException("Node already registered!");
         DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(obj);
         casesNode.add(newNode);
         reload(casesNode);

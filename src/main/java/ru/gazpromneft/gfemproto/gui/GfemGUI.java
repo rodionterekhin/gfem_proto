@@ -3,11 +3,10 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import ru.gazpromneft.gfemproto.Conventions;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 
-public class GfemGUI extends BasicGUI implements TreeSelectionListener {
+public class GfemGUI extends BasicGUI {
     private final IMainController controller;
     private JTabbedPane tabbedPane;
     private JPanel mainPanel;
@@ -29,7 +28,6 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
     private JPanel resultsPanel;
     private JPanel dataStructurePanel;
     private JPanel inputNumericPanel;
-    private JPanel inputArrayPanel;
     private JPanel outputNumericPanel;
     private JPanel outputArrayPanel;
     private JButton выгрузкаВЭксельButton;
@@ -39,6 +37,9 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
     private JScrollPane treeScrollablePane;
     private JPanel statusBarPanel;
     private JLabel lblStatus;
+    private JPanel inputArrayPanel;
+    private JScrollPane inputNumericScrollPane;
+    private JScrollPane inputArrayScrollPane;
 
     private JMenuBar menuBar;
     private JMenu mnuFile, mnuEdit;
@@ -47,19 +48,20 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
     private HashMap<String, PanelFiller> panelFillers = new HashMap<>();
 
 
-    public GfemGUI(IMainController controller) {
+    public GfemGUI(IMainController controller, Image icon) {
         this.controller = controller;
-        setTitle("Apache POI Demo");
+        setTitle(Conventions.APPLICATION_NAME);
         setContentPane(mainPanel);
         pack();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setIconImage(icon);
 
         menuBar = new JMenuBar();
         mnuFile = new JMenu("Файл");
         mniAbout = new JMenuItem("О программе");
         mniSupportedFunctions = new JMenuItem("Поддерживаемые функции");
         mniExit = new JMenuItem("Выход");
-        mniExit.addActionListener((ActionEvent ae) -> controller.exit());
+        mniExit.addActionListener((ActionEvent ae) -> this.dispose());
         mniAbout.addActionListener((ActionEvent ae) -> controller.about());
         mniSupportedFunctions.addActionListener((ActionEvent ae) -> controller.available_functions());
         mnuFile.add(mniAbout);
@@ -85,13 +87,17 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         btnCreateDuplicate.addActionListener((ActionEvent e) -> controller.duplicateNode());
         btnDeleteElement.addActionListener((ActionEvent e) -> controller.deleteNode());
         treeDataStructure.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        treeDataStructure.addTreeSelectionListener(this);
+        treeDataStructure.addTreeSelectionListener((tsl) -> controller.treeSelectionChanged(treeDataStructure.getLastSelectedPathComponent()));
         inputNumericPanel.setLayout(new SpringLayout());
         inputArrayPanel.setLayout(new SpringLayout());
         outputNumericPanel.setLayout(new SpringLayout());
         outputArrayPanel.setLayout(new SpringLayout());
         cmbSelectedModel.addActionListener((ActionEvent e) -> controller.changedModel());
-
+        treeScrollablePane.setViewportView(treeDataStructure);
+        inputNumericScrollPane.setViewportView(inputNumericPanel);
+        inputArrayScrollPane.setViewportView(inputArrayPanel);
+        //inputNumericScrollPane.setViewportView(inputNumericPanel);
+        // inputNumericScrollPane.setViewportView(inputNumericPanel);
         setupPanelFillers();
     }
 
@@ -140,7 +146,11 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
 
     public void clearOutputEntries() {
         panelFillers.get("OutputNumeric").clearEntries();
-        panelFillers.get("InputNumeric").clearEntries();
+        panelFillers.get("OutputNumeric").clearEntries();
+        outputNumericPanel.revalidate();
+        outputNumericPanel.repaint();
+        outputArrayPanel.revalidate();
+        outputArrayPanel.repaint();
     }
 
     public void addInputNumericEntry(String name, String value) {
@@ -152,16 +162,11 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
     }
 
     public void addOutputNumericEntry(String name, String value) {
-        JLabel l = new JLabel(name, JLabel.TRAILING);
-        outputNumericPanel.add(l);
-        JTextField textField = new JTextField();
-        textField.setText(value);
-        l.setLabelFor(textField);
-        outputNumericPanel.add(textField);
+        panelFillers.get("OutputNumeric").addNumericEntry(name, value);
     }
 
-    public void addOutputArrayEntry(String name, String value) {
-
+    public void addOutputArrayEntry(String name, HashMap<Double, Double> value) {
+        panelFillers.get("OutputArray").addArrayEntry(name, value);
     }
 
     {
@@ -198,18 +203,22 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         final Spacer spacer1 = new Spacer();
         inputPanel.add(spacer1, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
         final Spacer spacer2 = new Spacer();
-        inputPanel.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(200, 10), new Dimension(200, 10), new Dimension(200, 10), 0, false));
-        inputNumericPanel = new JPanel();
-        inputNumericPanel.setLayout(new BorderLayout(0, 0));
-        inputPanel.add(inputNumericPanel, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        inputArrayPanel = new JPanel();
-        inputArrayPanel.setLayout(new BorderLayout(0, 0));
-        inputPanel.add(inputArrayPanel, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputPanel.add(spacer2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(300, 10), new Dimension(300, 10), new Dimension(300, 10), 0, false));
         final JSeparator separator1 = new JSeparator();
         separator1.setOrientation(1);
         inputPanel.add(separator1, new GridConstraints(1, 2, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
         inputPanel.add(spacer3, new GridConstraints(1, 0, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, 1, new Dimension(3, -1), new Dimension(3, -1), new Dimension(3, -1), 0, false));
+        inputNumericScrollPane = new JScrollPane();
+        inputPanel.add(inputNumericScrollPane, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputNumericPanel = new JPanel();
+        inputNumericPanel.setLayout(new BorderLayout(0, 0));
+        inputNumericScrollPane.setViewportView(inputNumericPanel);
+        inputArrayScrollPane = new JScrollPane();
+        inputPanel.add(inputArrayScrollPane, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        inputArrayPanel = new JPanel();
+        inputArrayPanel.setLayout(new BorderLayout(0, 0));
+        inputArrayScrollPane.setViewportView(inputArrayPanel);
         resultsPanel = new JPanel();
         resultsPanel.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Результаты расчета", resultsPanel);
@@ -220,7 +229,7 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         label4.setText("Массивы");
         resultsPanel.add(label4, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
-        resultsPanel.add(spacer4, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, 1, new Dimension(200, 10), new Dimension(200, 10), new Dimension(200, 10), 0, false));
+        resultsPanel.add(spacer4, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, 1, new Dimension(300, 10), new Dimension(300, 10), new Dimension(300, 10), 0, false));
         final Spacer spacer5 = new Spacer();
         resultsPanel.add(spacer5, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, 1, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
         outputNumericPanel = new JPanel();
@@ -273,7 +282,9 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         final JSeparator separator4 = new JSeparator();
         dataStructurePanel.add(separator4, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 5), new Dimension(-1, 5), new Dimension(-1, 5), 0, false));
         treeScrollablePane = new JScrollPane();
-        dataStructurePanel.add(treeScrollablePane, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        treeScrollablePane.setHorizontalScrollBarPolicy(30);
+        treeScrollablePane.setVerticalScrollBarPolicy(20);
+        dataStructurePanel.add(treeScrollablePane, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(298, -1), new Dimension(298, -1), new Dimension(298, -1), 0, false));
         treeScrollablePane.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         treeDataStructure = new JTree();
         treeDataStructure.setLargeModel(false);
@@ -313,11 +324,6 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
         return mainPanel;
     }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        controller.treeSelectionChanged(treeDataStructure.getLastSelectedPathComponent());
-    }
-
     public void setStatus(String status) {
         lblStatus.setText(status);
     }
@@ -335,5 +341,13 @@ public class GfemGUI extends BasicGUI implements TreeSelectionListener {
             list.add(cmbSelectedModel.getModel().getElementAt(i));
         }
         return list;
+    }
+
+    public void focusOnOutput() {
+        tabbedPane.setSelectedIndex(1);
+    }
+
+    public void updateTree() {
+        this.treeDataStructure.updateUI();
     }
 }

@@ -10,10 +10,14 @@ import ru.gazpromneft.gfemproto.gui.GfemGUI;
 import ru.gazpromneft.gfemproto.gui.IMainController;
 import ru.gazpromneft.gfemproto.model.*;
 
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
 import java.io.*;
 
+import java.net.URL;
 import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,10 +43,16 @@ public class App implements IMainController {
 
     public App() {
         FlatIntelliJLaf.setup();
-        // GfemGUI.updateLookAndFeel();
         logger = Logger.getLogger(this.getClass().getName());
+        Image icon = null;
+        URL imgURL = getClass().getResource("/icon.png");
+        if (imgURL != null) {
+            icon = new ImageIcon(imgURL).getImage();
+        } else {
+            logger.severe("Couldn't find file: " + "/icon.png");
+        }
         tryRegisterSLN();
-        mf = new GfemGUI(this);
+        mf = new GfemGUI(this, icon);
         mf.setTreeModel(new ExcelTreeModel());
         clearComboBox();
         if (loadStateExists()) {
@@ -99,6 +109,11 @@ public class App implements IMainController {
         }
     }
 
+    public void copyFrom(CalculationSchema schema) {
+        ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(new CalculationSchema(schema.getModel(), schema.getInputData()));
+        mf.setStatus("Дублирован кейс " + schema.getInputData());
+    }
+
     @Override
     public String loadCase() {
         File dataFile = mf.openFileDialog();
@@ -106,9 +121,8 @@ public class App implements IMainController {
             return "";
         try {
             InputData data = InputDataFactory.fromFile(dataFile);
-            if (((ExcelTreeModel)mf.getTreeModel()).casesContain(data))
-                throw new InputDataLoadException("Данные уже были загружены!");
-            ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(data);
+            CalculationSchema schema = new CalculationSchema(null, data);
+            ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(schema);
             mf.setStatus("Загружен кейс " + data);
             return dataFile.getAbsolutePath();
         } catch (InputDataLoadException e) {
@@ -144,10 +158,11 @@ public class App implements IMainController {
     @Override
     public void calculate() {
         if (selectedNode != null) {
-            if (!(selectedNode.getUserObject() instanceof InputData dataToCalculate))
+            if (!(selectedNode.getUserObject() instanceof CalculationSchema calculationSchema))
+                return;
+            if (Objects.isNull(calculationSchema.getModel()))
                 return;
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
-            CalculationSchema calculationSchema = new CalculationSchema(dataToCalculate);
             Supplier<CalculationSchema> calculationSupplier = () -> {
                 logger.info("Scheduled calculation for schema " + calculationSchema);
                 mf.setStatus("Выполняю расчет " + calculationSchema);
@@ -175,8 +190,49 @@ public class App implements IMainController {
         logger.info("Calculation done for schema " + schema + "");
         mf.setStatus("Расчет " + schema + " выполнен");
         // TODO result display in GUI
-        mf.showInfo(schema.getResult().getTextReport());
+        refresh();
         logger.info(schema.getResult().asMap().toString());
+        // mf.showInfo("Расчет " + schema + " выполнен");
+        mf.focusOnOutput();
+    }
+
+    private void refresh() {
+        comboBoxLock = true;
+        mf.clearInputEntries();
+        mf.clearOutputEntries();
+        if (Objects.isNull(selectedNode)) {
+            clearComboBox();
+            return;
+        }
+        Object uncastObject = selectedNode.getUserObject();
+        if (uncastObject instanceof CalculationSchema selectedSchema) {
+            showAllModelsInComboBox();
+            for(Entry<String, Object> e: selectedSchema.getInputData().asMap().entrySet()) {
+                if (e.getValue() instanceof Number)
+                    mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                else if (e.getValue() instanceof HashMap<?, ?> hashMap)
+                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) hashMap);
+            }
+            Object shouldSelect = selectedSchema.getModel();
+            if (Objects.isNull(shouldSelect))
+                shouldSelect = EMPTY_MODEL;
+            setComboboxSelected(shouldSelect);
+            if (selectedSchema.isCompleted()) {
+                if (!selectedSchema.isResultActual()) {
+                    mf.addOutputNumericEntry("Результаты не актуальны! Пересчитайте кейс", null);
+                } else {
+                    for (Entry<String, Object> e : selectedSchema.getResult().asMap().entrySet()) {
+                        if (e.getValue() instanceof Double) {
+                            mf.addOutputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                        }
+                    }
+                }
+            }
+        } else {
+            clearComboBox();
+        }
+        mf.updateTree();
+        comboBoxLock = false;
     }
 
     public void exit() {
@@ -196,32 +252,13 @@ public class App implements IMainController {
 
     @Override
     public void treeSelectionChanged(Object selectedObject) {
-
-        mf.clearInputEntries();
-        mf.clearOutputEntries();
+        logger.info("Tree selection changed");
         if (Objects.isNull(selectedObject)) {
-            clearComboBox();
             selectedNode = null;
             return;
         }
         selectedNode = (DefaultMutableTreeNode) selectedObject;
-        Object uncastObject = selectedNode.getUserObject();
-        if (uncastObject instanceof InputData selected) {
-            showAllModelsInComboBox();
-            for(Entry<String, Object> e: selected.asMap().entrySet()) {
-                if (e.getValue() instanceof Number)
-                    mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
-                else if (e.getValue() instanceof HashMap<?, ?> hashMap)
-                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) hashMap);
-            }
-            Object shouldSelect = selected.getAttachedModel();
-            if (Objects.isNull(shouldSelect))
-                shouldSelect = EMPTY_MODEL;
-            setComboboxSelected(shouldSelect);
-        } else {
-            clearComboBox();
-        }
-
+        refresh();
     }
 
     @Override
@@ -231,16 +268,17 @@ public class App implements IMainController {
         logger.log(Level.INFO, "Combobox action performed");
         if (selectedNode != null) {
             Object uncastObject = selectedNode.getUserObject();
-            if (uncastObject instanceof InputData selected) {
+            if (uncastObject instanceof CalculationSchema selected) {
                 if (Objects.isNull(mf.getComboboxSelected()))
-                    return;
+                    mf.setComboboxSelected(EMPTY_MODEL);
                 if (mf.getComboboxSelected().equals(EMPTY_MODEL)) {
-                    selected.attachModel(null);
+                    selected.setModel(null);
                 } else {
-                    selected.attachModel((ExcelModel) mf.getComboboxSelected());
+                    selected.setModel((ExcelModel) mf.getComboboxSelected());
                 }
             }
         }
+        refresh();
     }
 
     @Override
@@ -257,7 +295,7 @@ public class App implements IMainController {
         if (Objects.isNull(selectedNode))
             return;
         Object data = selectedNode.getUserObject();
-        if (data instanceof InputData || data instanceof ExcelModel) {
+        if (data instanceof CalculationSchema || data instanceof ExcelModel) {
             ((ExcelTreeModel) mf.getTreeModel()).deleteNode(selectedNode);
         } else {
             logger.log(Level.INFO, "Trying to delete a non-user node, ha-ha");
@@ -267,19 +305,8 @@ public class App implements IMainController {
 
     @Override
     public void duplicateNode() {
-        ExcelTreeModel etm =  (ExcelTreeModel) mf.getTreeModel();
-        if (etm.modelsContain(selectedNode)) {
-            DefaultMutableTreeNode duplicate = (DefaultMutableTreeNode) selectedNode.clone();
-            ExcelModel model = (ExcelModel) duplicate.getUserObject();
-            model.changeName(model + " (copy)");
-            etm.addModelNode(model);
-        } else if (etm.casesContain(selectedNode)) {
-            DefaultMutableTreeNode duplicate = (DefaultMutableTreeNode) selectedNode.clone();
-            InputData data = (InputData) duplicate.getUserObject();
-            data.changeName(data + " (copy)");
-            etm.addCaseNode(data);
-        } else {
-            assert false;
+        if (selectedNode!= null && selectedNode.getUserObject() instanceof CalculationSchema) {
+            copyFrom((CalculationSchema) selectedNode.getUserObject());
         }
     }
 

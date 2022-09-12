@@ -13,8 +13,9 @@ public class PanelFiller {
         this.panel = panel;
     }
 
+
     public void addNumericEntry(String name, String value) {
-        JLabel l = new JLabel(name, JLabel.TRAILING);
+        JLabel l = new JLabel(name + ": ", JLabel.TRAILING);
         panel.add(l);
         JTextField textField = new JTextField();
         textField.setText(value);
@@ -27,9 +28,11 @@ public class PanelFiller {
                 5,
                 SpringLayout.WEST, panel);
         ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.NORTH, l,
-                7,
+                10,
                 targetDirection, target);
-
+        ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.EAST, textField,
+                -5,
+                SpringLayout.EAST, panel);
         ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.WEST, textField,
                 5,
                 SpringLayout.EAST, l);
@@ -38,10 +41,11 @@ public class PanelFiller {
                 targetDirection, target);
         previousLabel = l;
         previousTextField = textField;
+        this.panel.updateUI();
     }
 
     public void addArrayEntry(String name, HashMap<Double, Double> value) {
-        JLabel l = new JLabel(name, JLabel.TRAILING);
+        JLabel l = new JLabel(name + ": ", JLabel.TRAILING);
         panel.add(l);
         JTextField textField = new JTextField();
         textField.setText(String.valueOf(value));
@@ -54,24 +58,29 @@ public class PanelFiller {
                 5,
                 SpringLayout.WEST, panel);
         ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.NORTH, l,
-                7,
+                10,
                 targetDirection, target);
 
         ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.WEST, textField,
                 5,
                 SpringLayout.EAST, l);
+        ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.EAST, textField,
+                -5,
+                SpringLayout.EAST, panel);
         ((SpringLayout) panel.getLayout()).putConstraint(SpringLayout.NORTH, textField,
                 5,
                 targetDirection, target);
         previousLabel = l;
         previousTextField = textField;
+        this.panel.setMinimumSize(new Dimension(500, 50000));
+        this.panel.updateUI();
     }
 
     public void clearEntries() {
         previousLabel = null;
         previousTextField = null;
-        for (int i = 0; i < panel.getComponentCount(); i++) {
-            panel.remove(i);
+        while(panel.getComponentCount() > 0) {
+            panel.remove(0);
         }
     }
 }

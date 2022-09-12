@@ -3,6 +3,7 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import ru.gazpromneft.gfemproto.Conventions;
 
 import java.awt.*;
 import javax.swing.*;
@@ -25,7 +26,7 @@ public class TinyGUI extends BasicGUI {
 
 
         this.controller = iController;
-        setTitle("Apache POI Demo");
+        setTitle(Conventions.APPLICATION_NAME);
         setContentPane(mainPanel);
         setResizable(false);
         pack();

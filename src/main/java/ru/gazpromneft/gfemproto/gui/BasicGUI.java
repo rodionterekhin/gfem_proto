@@ -1,7 +1,10 @@
 package ru.gazpromneft.gfemproto.gui;
 
+import ru.gazpromneft.gfemproto.Conventions;
+
 import javax.swing.*;
 import java.io.File;
+import java.text.CompactNumberFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,7 +45,7 @@ public class BasicGUI extends JFrame {
     }
 
     public void showInfo(String message) {
-        JOptionPane.showMessageDialog(new JFrame(), message, "Apache POI Demo",
+        JOptionPane.showMessageDialog(new JFrame(), message, Conventions.APPLICATION_NAME,
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
