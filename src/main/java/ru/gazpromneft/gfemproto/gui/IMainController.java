@@ -18,4 +18,6 @@ public interface IMainController {
     void changedModel();
 
     void available_functions();
+
+    void saveToExcel();
 }

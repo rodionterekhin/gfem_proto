@@ -1,7 +1,11 @@
 package ru.gazpromneft.gfemproto.model;
 
+import org.apache.commons.io.FileUtils;
 import ru.gazpromneft.gfemproto.Conventions;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
 
 public class CalculationSchema implements Serializable {
@@ -12,6 +16,7 @@ public class CalculationSchema implements Serializable {
     // Parameters parameters;
     protected OutputData result;
     private boolean actualResult;
+    private File file;
 
     public CalculationSchema(ExcelModel model, InputData inputData) {
         this.data = inputData;
@@ -60,5 +65,31 @@ public class CalculationSchema implements Serializable {
     public void setModel(ExcelModel model) {
         this.actualResult = false;
         this.model = model;
+    }
+
+    protected void freezeToExcel() {
+        if (!isCompleted() || !isResultActual()) {
+            return;
+        } else {
+            FileOutputStream out = null;
+            try {
+                File tempFile = File.createTempFile("prefix-", "-suffix");
+                tempFile.deleteOnExit();
+                out = new FileOutputStream(tempFile);
+                this.model.workbook.get().write(out);
+                out.close();
+                this.file = tempFile;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void saveToFile(File file) throws IOException {
+        if (!isCompleted() || !isResultActual()) {
+            return;
+        } else {
+            FileUtils.copyFile(this.file, file);
+        }
     }
 }

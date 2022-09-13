@@ -1,6 +1,8 @@
 package ru.gazpromneft.gfemproto;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
@@ -16,6 +18,8 @@ import java.awt.*;
 import java.io.*;
 
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
@@ -197,6 +201,7 @@ public class App implements IMainController {
     }
 
     private void refresh() {
+        NumberFormat formatter = new DecimalFormat("#0.00");
         comboBoxLock = true;
         mf.clearInputEntries();
         mf.clearOutputEntries();
@@ -209,7 +214,7 @@ public class App implements IMainController {
             showAllModelsInComboBox();
             for(Entry<String, Object> e: selectedSchema.getInputData().asMap().entrySet()) {
                 if (e.getValue() instanceof Number)
-                    mf.addInputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                    mf.addInputNumericEntry(e.getKey(), formatter.format(e.getValue()));
                 else if (e.getValue() instanceof HashMap<?, ?> hashMap)
                     mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) hashMap);
             }
@@ -223,7 +228,7 @@ public class App implements IMainController {
                 } else {
                     for (Entry<String, Object> e : selectedSchema.getResult().asMap().entrySet()) {
                         if (e.getValue() instanceof Double) {
-                            mf.addOutputNumericEntry(e.getKey(), String.valueOf(e.getValue()));
+                            mf.addOutputNumericEntry(e.getKey(), formatter.format(e.getValue()));
                         }
                     }
                 }
@@ -288,6 +293,26 @@ public class App implements IMainController {
         AtomicInteger i = new AtomicInteger(1);
         FunctionEval.getSupportedFunctionNames().forEach((a) -> msg.append(a).append((i.getAndIncrement()%columnsCount)==0 ?"\n" : ", "));
         mf.showInfo(msg.substring(0, msg.length() - 2));
+    }
+
+    @Override
+    public void saveToExcel() {
+        if (Objects.isNull(selectedNode))
+            return;
+        Object data = selectedNode.getUserObject();
+        if (data instanceof CalculationSchema selectedSchema) {
+            File destination = mf.saveFileDialog();
+            if (Objects.isNull(destination))
+                return;
+            if (!destination.getAbsolutePath().endsWith(".xlsx"))
+                destination = new File(destination.getAbsolutePath() + ".xlsx");
+            try {
+                selectedSchema.saveToFile(destination);
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+                mf.showError(e.getMessage());
+            }
+        }
     }
 
     @Override

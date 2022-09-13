@@ -54,4 +54,19 @@ public class BasicGUI extends JFrame {
         JOptionPane.showMessageDialog(new JFrame(), message, "Ошибка",
                 JOptionPane.ERROR_MESSAGE);
     }
+
+    public File saveFileDialog() {
+        Logger logger = Logger.getLogger(TinyGUI.class.getName());
+        int returnVal = fc.showSaveDialog(this);
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fc.getSelectedFile();
+            //This is where a real application would open the file.
+            logger.log(Level.INFO, "Opening: " + file.getName() + ".");
+            return file;
+        } else {
+            logger.log(Level.INFO, "Open command cancelled by user.");
+            return null;
+        }
+    }
 }

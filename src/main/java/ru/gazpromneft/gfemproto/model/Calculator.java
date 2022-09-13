@@ -5,6 +5,7 @@ public class Calculator {
         try {
             schema.model.setData(schema.data);
             schema.setResult(schema.model.calculate());
+            schema.freezeToExcel();
             return schema;
         } catch (Exception e) {
             throw new CalculationError(e, schema);

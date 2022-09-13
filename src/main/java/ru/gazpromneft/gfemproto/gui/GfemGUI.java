@@ -11,6 +11,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,7 @@ public class GfemGUI extends BasicGUI {
     private JPanel inputNumericPanel;
     private JPanel outputNumericPanel;
     private JPanel outputArrayPanel;
-    private JButton выгрузкаВЭксельButton;
+    private JButton btnSaveToExcel;
     private JButton btnDeleteElement;
     private JButton btnCreateDuplicate;
     private JComboBox cmbSelectedModel;
@@ -98,7 +99,9 @@ public class GfemGUI extends BasicGUI {
         inputArrayScrollPane.setViewportView(inputArrayPanel);
         //inputNumericScrollPane.setViewportView(inputNumericPanel);
         // inputNumericScrollPane.setViewportView(inputNumericPanel);
+        btnSaveToExcel.addActionListener((ActionEvent e) -> controller.saveToExcel());
         setupPanelFillers();
+
     }
 
     private void setupPanelFillers() {
@@ -195,7 +198,7 @@ public class GfemGUI extends BasicGUI {
         inputPanel.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Исходные данные", inputPanel);
         final JLabel label1 = new JLabel();
-        label1.setText("Числовые параметры");
+        label1.setText("Параметры расчета");
         inputPanel.add(label1, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Массивы");
@@ -223,7 +226,7 @@ public class GfemGUI extends BasicGUI {
         resultsPanel.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Результаты расчета", resultsPanel);
         final JLabel label3 = new JLabel();
-        label3.setText("Числовые параметры");
+        label3.setText("КПЭ");
         resultsPanel.add(label3, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label4 = new JLabel();
         label4.setText("Массивы");
@@ -252,9 +255,9 @@ public class GfemGUI extends BasicGUI {
         panel1.add(spacer8, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer9 = new Spacer();
         panel1.add(spacer9, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
-        выгрузкаВЭксельButton = new JButton();
-        выгрузкаВЭксельButton.setText("Выгрузка в эксель...");
-        panel1.add(выгрузкаВЭксельButton, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        btnSaveToExcel = new JButton();
+        btnSaveToExcel.setText("Выгрузка в эксель...");
+        panel1.add(btnSaveToExcel, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator3 = new JSeparator();
         separator3.setOrientation(1);
         mainPanel.add(separator3, new GridConstraints(1, 2, 3, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
