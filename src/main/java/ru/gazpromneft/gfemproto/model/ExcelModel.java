@@ -110,7 +110,7 @@ public class ExcelModel implements Serializable {
 
     private void updateModelWithData(InputData data) {
 
-        List<Double> currentIndex = null;
+        List<Number> currentIndex = null;
 
         Sheet modelDataSheet = this.workbook.get().getSheet("input");
 
@@ -138,8 +138,12 @@ public class ExcelModel implements Serializable {
 
             Conventions.VariableType type = Conventions.VariableType.fromText(typeString);
             assert !Objects.isNull(type);  // Мы уже прошли валидацию книги, все типы должны быть в порядке
+            if (type != Conventions.VariableType.INDEX && Objects.isNull(data.asMap().get(name))) {
+                Logger.getLogger(getClass().getName()).warning(String.format("В данных нет показателя \"%s\"", name));
+                continue;
+            }
             if (type == Conventions.VariableType.NUMERIC) {
-                r.getCell(2).setCellValue((Double) data.asMap().get(name));
+                r.getCell(2).setCellValue(((Number) data.asMap().get(name)).doubleValue());
             }
             else if (type == Conventions.VariableType.INDEX) {
                 currentIndex = IndexedUtils.parseArray(r);
@@ -148,7 +152,7 @@ public class ExcelModel implements Serializable {
                 assert currentIndex != null;
                 Object value = data.asMap().get(name);
                 if (value instanceof Map<?, ?> values_uncast) {
-                    Map<Double, Double> values = (Map<Double, Double>) values_uncast;
+                    Map<Number, Number> values = (Map<Number, Number>) values_uncast;
                     IndexedUtils.fillArray(r, IndexedUtils.sequenceFromArray(currentIndex, values));
                 }
             }

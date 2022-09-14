@@ -28,6 +28,7 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     public void addCaseNode(Object obj) {
         DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(obj);
         casesNode.add(newNode);
+
         reload(casesNode);
     }
 
@@ -95,5 +96,12 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
         treeNode.children().asIterator().forEachRemaining((tn) ->
                 list.add(((DefaultMutableTreeNode)tn).getUserObject()));
         return list;
+    }
+
+    public void refreshNodes() {
+        for (Iterator<TreeNode> it = casesNode.children().asIterator(); it.hasNext(); ) {
+            TreeNode node = it.next();
+            reload(node);
+        }
     }
 }

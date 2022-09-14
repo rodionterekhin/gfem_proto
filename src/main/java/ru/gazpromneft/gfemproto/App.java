@@ -1,8 +1,6 @@
 package ru.gazpromneft.gfemproto;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
 import org.apache.poi.ss.formula.eval.FunctionEval;
@@ -13,6 +11,7 @@ import ru.gazpromneft.gfemproto.gui.IMainController;
 import ru.gazpromneft.gfemproto.model.*;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.io.*;
@@ -40,39 +39,52 @@ public class App implements IMainController {
 
     private final Object EMPTY_MODEL = Conventions.EMPTY_MODEL;
 
-    private final GfemGUI mf;
+    private final GfemGUI gui;
     private final Logger logger;
     private DefaultMutableTreeNode selectedNode;
     private boolean comboBoxLock;
+    private TableModel tableModel;
+    private List<List<Object>> tableData;
+    private List<Number> tableIndex;
 
     public App() {
-        FlatIntelliJLaf.setup();
         logger = Logger.getLogger(this.getClass().getName());
+        FlatIntelliJLaf.setup();
+        Image icon = getAppIcon();
+        tryRegisterSLN();
+        gui = new GfemGUI(this, icon);
+        tryLoadState();
+        SwingUtilities.invokeLater(this::refresh);
+        gui.setVisible(true);
+    }
+
+    private void tryLoadState() {
+        if (loadStateExists()) {
+            try {
+                gui.setTreeModel(loadState());
+            } catch (IOException e) {
+                gui.showError("Файл состояния повержден и не может быть восстановлен!");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                gui.setTreeModel(new ExcelTreeModel());
+            } catch (ClassNotFoundException e) {
+                gui.showError("Файл состояния предназначен для другой версии программы!");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                gui.setTreeModel(new ExcelTreeModel());
+            }
+        } else {
+            logger.info("No state file found. Assuming this is the first time the application is opened");
+        }
+    }
+
+    private Image getAppIcon() {
         Image icon = null;
-        URL imgURL = getClass().getResource("/icon.png");
+        URL imgURL = getClass().getResource(Conventions.ICON_PATH);
         if (imgURL != null) {
             icon = new ImageIcon(imgURL).getImage();
         } else {
-            logger.severe("Couldn't find file: " + "/icon.png");
+            logger.severe("Couldn't find file: " + Conventions.ICON_PATH);
         }
-        tryRegisterSLN();
-        mf = new GfemGUI(this, icon);
-        mf.setTreeModel(new ExcelTreeModel());
-        clearComboBox();
-        if (loadStateExists()) {
-            try {
-                mf.setTreeModel(loadState());
-            } catch (IOException e) {
-                mf.showError("Файл состояния повержден и не может быть восстановлен!");
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                mf.setTreeModel(new ExcelTreeModel());
-            } catch (ClassNotFoundException e) {
-                mf.showError("Файл состояния предназначен для другой версии программы!");
-                logger.log(Level.SEVERE, e.getMessage(), e);
-                mf.setTreeModel(new ExcelTreeModel());
-            }
-        }
-        mf.setVisible(true);
+        return icon;
     }
 
 
@@ -85,63 +97,74 @@ public class App implements IMainController {
     }
 
     public static void main(String[] args) {
+        createSplashScreen();
         WorkbookFactory.addProvider(new HSSFWorkbookFactory());
         WorkbookFactory.addProvider(new XSSFWorkbookFactory());
         new App();
     }
 
-
+    private static void createSplashScreen() {
+        final SplashScreen splash = SplashScreen.getSplashScreen();
+        if (splash == null) {
+            Logger.getAnonymousLogger().warning("SplashScreen.getSplashScreen() returned null");
+            return;
+        }
+        Graphics2D g = splash.createGraphics();
+        if (g == null) {
+            Logger.getAnonymousLogger().warning("g is null");
+        }
+    }
 
 
     @Override
     public String loadModel() {
-        File modelFile = mf.openFileDialog();
+        File modelFile = gui.openFileDialog();
         if (Objects.isNull(modelFile))
             return "";
         try {
             ExcelModel model = ExcelModelFactory.fromFile(modelFile);
-            if (((ExcelTreeModel)mf.getTreeModel()).modelsContain(model))
+            if (((ExcelTreeModel) gui.getTreeModel()).modelsContain(model))
                 throw new ModelLoadException("Выбранная модель уже загружена!");
-            ((ExcelTreeModel)mf.getTreeModel()).addModelNode(model);
+            ((ExcelTreeModel) gui.getTreeModel()).addModelNode(model);
             showAllModelsInComboBox();
-            mf.setStatus("Загружена модель " + model);
+            gui.setStatus("Загружена модель " + model);
             return modelFile.getAbsolutePath();
         } catch (ModelLoadException | ModelValidationException e) {
             logger.warning(e.getMessage());
-            mf.showError(e.getMessage());
+            gui.showError(e.getMessage());
             return "";
         }
     }
 
     public void copyFrom(CalculationSchema schema) {
-        ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(new CalculationSchema(schema.getModel(), schema.getInputData()));
-        mf.setStatus("Дублирован кейс " + schema.getInputData());
+        ((ExcelTreeModel) gui.getTreeModel()).addCaseNode(new CalculationSchema(schema.getModel(), schema.getInputData()));
+        gui.setStatus("Дублирован кейс " + schema.getInputData());
     }
 
     @Override
     public String loadCase() {
-        File dataFile = mf.openFileDialog();
+        File dataFile = gui.openFileDialog();
         if (Objects.isNull(dataFile))
             return "";
         try {
             InputData data = InputDataFactory.fromFile(dataFile);
             CalculationSchema schema = new CalculationSchema(null, data);
-            ((ExcelTreeModel)mf.getTreeModel()).addCaseNode(schema);
-            mf.setStatus("Загружен кейс " + data);
+            ((ExcelTreeModel) gui.getTreeModel()).addCaseNode(schema);
+            gui.setStatus("Загружен кейс " + data);
             return dataFile.getAbsolutePath();
         } catch (InputDataLoadException e) {
             logger.warning(e.getMessage());
-            mf.showError(e.getMessage());
+            gui.showError(e.getMessage());
             return "";
         }
     }
 
     private void showAllModelsInComboBox() {
         comboBoxLock = true;
-        Object selected = mf.getComboboxSelected();
-        List<Object> values = ((ExcelTreeModel) mf.getTreeModel()).getModels();
+        Object selected = gui.getComboboxSelected();
+        List<Object> values = ((ExcelTreeModel) gui.getTreeModel()).getModels();
         values.add(EMPTY_MODEL);
-        mf.setComboboxValues(values.toArray());
+        gui.setComboboxValues(values.toArray());
         setComboboxSelected(selected);
         comboBoxLock = false;
     }
@@ -149,13 +172,13 @@ public class App implements IMainController {
 
     private void clearComboBox() {
         comboBoxLock = true;
-        mf.setComboboxValues();
+        gui.setComboboxValues();
         comboBoxLock = false;
     }
 
     private void setComboboxSelected(Object value) {
         comboBoxLock = true;
-        mf.setComboboxSelected(value);
+        gui.setComboboxSelected(value);
         comboBoxLock = false;
     }
 
@@ -169,7 +192,7 @@ public class App implements IMainController {
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
             Supplier<CalculationSchema> calculationSupplier = () -> {
                 logger.info("Scheduled calculation for schema " + calculationSchema);
-                mf.setStatus("Выполняю расчет " + calculationSchema);
+                gui.setStatus("Выполняю расчет " + calculationSchema);
                 return Calculator.calculate(calculationSchema);
             };
             CompletableFuture.supplyAsync(calculationSupplier)
@@ -181,7 +204,7 @@ public class App implements IMainController {
     private CalculationSchema onCalculationError(Throwable throwable) {
         CalculationError error = (CalculationError) throwable.getCause();
         logger.info("Error occured during calculation of schema " + error.getSchema() + "");
-        mf.setStatus("При расчете схемы " + error.getSchema() + " произошла ошибка");
+        gui.setStatus("При расчете схемы " + error.getSchema() + " произошла ошибка");
         logger.log(Level.SEVERE, error.getMessage(), error.getTrueReason());
         return error.getSchema();
     }
@@ -192,19 +215,26 @@ public class App implements IMainController {
             return;
         }
         logger.info("Calculation done for schema " + schema + "");
-        mf.setStatus("Расчет " + schema + " выполнен");
-        // TODO result display in GUI
+        NumberFormat formatter = new DecimalFormat("#0");
+        gui.setStatus("Расчет " + schema + " выполнен (" + formatter.format(schema.getCalculationTime()) +  " мс)");
         refresh();
         logger.info(schema.getResult().asMap().toString());
         // mf.showInfo("Расчет " + schema + " выполнен");
-        mf.focusOnOutput();
+        gui.focusOnOutput();
     }
 
+    /**
+     * Function that reads current programme state and updates all view in accordance to that state.
+     * Dependent elements are:
+     * 1) Combo box
+     * 2) Tree view
+     */
     private void refresh() {
-        NumberFormat formatter = new DecimalFormat("#0.00");
         comboBoxLock = true;
-        mf.clearInputEntries();
-        mf.clearOutputEntries();
+        gui.clearInputEntries();
+        gui.clearOutputEntries();
+        gui.setBtnToExcelState(false);
+        gui.addInputTable(null);
         if (Objects.isNull(selectedNode)) {
             clearComboBox();
             return;
@@ -212,39 +242,61 @@ public class App implements IMainController {
         Object uncastObject = selectedNode.getUserObject();
         if (uncastObject instanceof CalculationSchema selectedSchema) {
             showAllModelsInComboBox();
-            for(Entry<String, Object> e: selectedSchema.getInputData().asMap().entrySet()) {
-                if (e.getValue() instanceof Number)
-                    mf.addInputNumericEntry(e.getKey(), formatter.format(e.getValue()));
-                else if (e.getValue() instanceof HashMap<?, ?> hashMap)
-                    mf.addInputArrayEntry(e.getKey(), (HashMap<Double, Double>) hashMap);
-            }
             Object shouldSelect = selectedSchema.getModel();
             if (Objects.isNull(shouldSelect))
                 shouldSelect = EMPTY_MODEL;
             setComboboxSelected(shouldSelect);
-            if (selectedSchema.isCompleted()) {
-                if (!selectedSchema.isResultActual()) {
-                    mf.addOutputNumericEntry("Результаты не актуальны! Пересчитайте кейс", null);
-                } else {
-                    for (Entry<String, Object> e : selectedSchema.getResult().asMap().entrySet()) {
-                        if (e.getValue() instanceof Double) {
-                            mf.addOutputNumericEntry(e.getKey(), formatter.format(e.getValue()));
-                        }
+
+            tableData = new ArrayList<>();
+            for (Entry<String, Object> e : selectedSchema.getInputData().asMap().entrySet()) {
+                if (e.getValue() instanceof Number)
+                    gui.addInputNumericEntry(e.getKey(), (Number) e.getValue());
+                else if (e.getValue() instanceof HashMap<?, ?> hashMap) {
+                    addToTable(e.getKey(), (HashMap<Number, Number>) e.getValue());
+                    // mf.addInputArrayEntry(e.getKey(), (HashMap<Number, Number>) hashMap);
+                }
+            }
+            gui.addInputTable(getTableModel());
+
+            if (!selectedSchema.isCompleted()) {
+                gui.addOutputNumericEntry("Требуется расчет", null);
+            } else {
+                gui.setBtnToExcelState(true);
+                for (Entry<String, Object> e : selectedSchema.getResult().asMap().entrySet()) {
+                    if (e.getValue() instanceof Number) {
+                        gui.addOutputNumericEntry(e.getKey(), (Number) e.getValue());
                     }
                 }
             }
         } else {
             clearComboBox();
         }
-        mf.updateTree();
+        gui.updateAll();
         comboBoxLock = false;
+    }
+
+    private TableModel getTableModel() {
+        return new ExcelTableModel(tableIndex, tableData);
+    }
+
+    private void addToTable(String key, HashMap<Number, Number> value) {
+        Set<Number> indexSet = new HashSet<>();
+        value.forEach((k, v) -> indexSet.add(k));
+        tableIndex = new ArrayList<>();
+        List<Object> tableRow = new ArrayList<>(Collections.singleton(key));
+        indexSet.stream().sorted().forEach((k) ->
+        {
+            tableRow.add(value.get(k));
+            tableIndex.add(k);
+        });
+        tableData.add(tableRow);
     }
 
     public void exit() {
         try {
             saveState();
         } catch (Exception e) {
-            mf.showError("Невозможно сохранить модели и данные в файл!");
+            gui.showError("Невозможно сохранить модели и данные в файл!");
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
         System.exit(0);
@@ -252,7 +304,7 @@ public class App implements IMainController {
 
     @Override
     public void about() {
-        mf.showInfo(Conventions.ABOUT_MESSAGE);
+        gui.showInfo(Conventions.ABOUT_MESSAGE);
     }
 
     @Override
@@ -264,6 +316,7 @@ public class App implements IMainController {
         }
         selectedNode = (DefaultMutableTreeNode) selectedObject;
         refresh();
+        logger.info("Refreshed");
     }
 
     @Override
@@ -274,12 +327,12 @@ public class App implements IMainController {
         if (selectedNode != null) {
             Object uncastObject = selectedNode.getUserObject();
             if (uncastObject instanceof CalculationSchema selected) {
-                if (Objects.isNull(mf.getComboboxSelected()))
-                    mf.setComboboxSelected(EMPTY_MODEL);
-                if (mf.getComboboxSelected().equals(EMPTY_MODEL)) {
+                if (Objects.isNull(gui.getComboboxSelected()))
+                    gui.setComboboxSelected(EMPTY_MODEL);
+                if (gui.getComboboxSelected().equals(EMPTY_MODEL)) {
                     selected.setModel(null);
                 } else {
-                    selected.setModel((ExcelModel) mf.getComboboxSelected());
+                    selected.setModel((ExcelModel) gui.getComboboxSelected());
                 }
             }
         }
@@ -291,8 +344,8 @@ public class App implements IMainController {
         final int columnsCount = 5;
         StringBuilder msg = new StringBuilder("Список поддерживаемых функций:\n");
         AtomicInteger i = new AtomicInteger(1);
-        FunctionEval.getSupportedFunctionNames().forEach((a) -> msg.append(a).append((i.getAndIncrement()%columnsCount)==0 ?"\n" : ", "));
-        mf.showInfo(msg.substring(0, msg.length() - 2));
+        FunctionEval.getSupportedFunctionNames().forEach((a) -> msg.append(a).append((i.getAndIncrement() % columnsCount) == 0 ? "\n" : ", "));
+        gui.showInfo(msg.substring(0, msg.length() - 2));
     }
 
     @Override
@@ -301,7 +354,7 @@ public class App implements IMainController {
             return;
         Object data = selectedNode.getUserObject();
         if (data instanceof CalculationSchema selectedSchema) {
-            File destination = mf.saveFileDialog();
+            File destination = gui.saveFileDialog();
             if (Objects.isNull(destination))
                 return;
             if (!destination.getAbsolutePath().endsWith(".xlsx"))
@@ -310,7 +363,7 @@ public class App implements IMainController {
                 selectedSchema.saveToFile(destination);
             } catch (IOException e) {
                 logger.warning(e.getMessage());
-                mf.showError(e.getMessage());
+                gui.showError(e.getMessage());
             }
         }
     }
@@ -321,7 +374,7 @@ public class App implements IMainController {
             return;
         Object data = selectedNode.getUserObject();
         if (data instanceof CalculationSchema || data instanceof ExcelModel) {
-            ((ExcelTreeModel) mf.getTreeModel()).deleteNode(selectedNode);
+            ((ExcelTreeModel) gui.getTreeModel()).deleteNode(selectedNode);
         } else {
             logger.log(Level.INFO, "Trying to delete a non-user node, ha-ha");
             // Just chilling
@@ -330,7 +383,7 @@ public class App implements IMainController {
 
     @Override
     public void duplicateNode() {
-        if (selectedNode!= null && selectedNode.getUserObject() instanceof CalculationSchema) {
+        if (selectedNode != null && selectedNode.getUserObject() instanceof CalculationSchema) {
             copyFrom((CalculationSchema) selectedNode.getUserObject());
         }
     }
@@ -342,7 +395,7 @@ public class App implements IMainController {
         ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
         logger.info("Created object output stream");
         // сохраняем дерево в файл
-        objectOutputStream.writeObject(mf.getTreeModel());
+        objectOutputStream.writeObject(gui.getTreeModel());
         logger.info("Saved tree model to output stream");
 
         //закрываем поток и освобождаем ресурсы
@@ -354,6 +407,7 @@ public class App implements IMainController {
         File f = new File(Conventions.STATE_FILE_NAME);
         return f.exists();
     }
+
     private ExcelTreeModel loadState() throws IOException, ClassNotFoundException {
         FileInputStream fileInputStream = new FileInputStream(Conventions.STATE_FILE_NAME);
         ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
@@ -363,4 +417,5 @@ public class App implements IMainController {
 
         return savedTreeModel;
     }
+
 }

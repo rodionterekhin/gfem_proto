@@ -4,7 +4,8 @@ import ru.gazpromneft.gfemproto.Conventions;
 
 import javax.swing.*;
 import java.io.File;
-import java.text.CompactNumberFormat;
+import javax.swing.filechooser.FileFilter;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,9 +13,34 @@ public class BasicGUI extends JFrame {
     protected final Logger logger;
     public BasicGUI() {
         logger = Logger.getLogger(this.getClass().getName());
+        fc.addChoosableFileFilter(excelFileFilter);
+        fc.setAcceptAllFileFilterUsed(false);
     }
 
     protected final JFileChooser fc = new JFileChooser();
+
+    private final FileFilter excelFileFilter = new FileFilter() {
+        @Override
+        public boolean accept(File f) {
+            if (f.isDirectory()) return true;
+            String extension = null;
+            String path = f.getName();
+            int i = path.lastIndexOf('.');
+
+            if (i > 0 &&  i < path.length() - 1) {
+                extension = path.substring(i+1).toLowerCase();
+            }
+            if (Objects.isNull(extension))
+                return false;
+            return extension.equals("xlsx") || extension.equals("xlsm");
+        }
+
+        @Override
+        public String getDescription() {
+            return Conventions.FILE_FILTER_TEXT;
+        }
+    };
+
     public static void updateLookAndFeel() {
         Logger logger = Logger.getLogger(BasicGUI.class.getName());
         try {
@@ -62,10 +88,10 @@ public class BasicGUI extends JFrame {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = fc.getSelectedFile();
             //This is where a real application would open the file.
-            logger.log(Level.INFO, "Opening: " + file.getName() + ".");
+            logger.log(Level.INFO, "Saving: " + file.getName() + ".");
             return file;
         } else {
-            logger.log(Level.INFO, "Open command cancelled by user.");
+            logger.log(Level.INFO, "Save command cancelled by user.");
             return null;
         }
     }

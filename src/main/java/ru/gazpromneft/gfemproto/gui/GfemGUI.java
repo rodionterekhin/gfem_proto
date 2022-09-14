@@ -4,18 +4,20 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import ru.gazpromneft.gfemproto.Conventions;
+import ru.gazpromneft.gfemproto.ExcelTreeModel;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.TableModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GfemGUI extends BasicGUI {
     private final IMainController controller;
@@ -80,8 +82,8 @@ public class GfemGUI extends BasicGUI {
         menuBar.add(mnuFile);
         menuBar.add(mnuEdit);
         setJMenuBar(menuBar);
-        setMinimumSize(new Dimension(800, 500));
-        setSize(new Dimension(800, 500));
+        setMinimumSize(new Dimension(1200, 800));
+        setSize(new Dimension(1200, 800));
         btnAddModel.addActionListener((ActionEvent e) -> controller.loadModel());
         btnAddCase.addActionListener((ActionEvent e) -> controller.loadCase());
         btnCalculate.addActionListener((ActionEvent e) -> controller.calculate());
@@ -141,9 +143,9 @@ public class GfemGUI extends BasicGUI {
         while (inputNumericPanel.getComponentCount() > 0) {
             inputNumericPanel.remove(0);
         }
-        inputNumericPanel.revalidate();
+        //inputNumericPanel.revalidate();
         inputNumericPanel.repaint();
-        inputArrayPanel.revalidate();
+        //inputArrayPanel.revalidate();
         inputArrayPanel.repaint();
     }
 
@@ -156,19 +158,19 @@ public class GfemGUI extends BasicGUI {
         outputArrayPanel.repaint();
     }
 
-    public void addInputNumericEntry(String name, String value) {
+    public void addInputNumericEntry(String name, Number value) {
         panelFillers.get("InputNumeric").addNumericEntry(name, value);
     }
 
-    public void addInputArrayEntry(String name, HashMap<Double, Double> value) {
+    public void addInputArrayEntry(String name, HashMap<Number, Number> value) {
         panelFillers.get("InputArray").addArrayEntry(name, value);
     }
 
-    public void addOutputNumericEntry(String name, String value) {
+    public void addOutputNumericEntry(String name, Number value) {
         panelFillers.get("OutputNumeric").addNumericEntry(name, value);
     }
 
-    public void addOutputArrayEntry(String name, HashMap<Double, Double> value) {
+    public void addOutputArrayEntry(String name, HashMap<Number, Number> value) {
         panelFillers.get("OutputArray").addArrayEntry(name, value);
     }
 
@@ -256,6 +258,7 @@ public class GfemGUI extends BasicGUI {
         final Spacer spacer9 = new Spacer();
         panel1.add(spacer9, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
         btnSaveToExcel = new JButton();
+        btnSaveToExcel.setEnabled(false);
         btnSaveToExcel.setText("Выгрузка в эксель...");
         panel1.add(btnSaveToExcel, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator3 = new JSeparator();
@@ -350,7 +353,28 @@ public class GfemGUI extends BasicGUI {
         tabbedPane.setSelectedIndex(1);
     }
 
-    public void updateTree() {
-        this.treeDataStructure.updateUI();
+    public void updateAll() {
+        ((ExcelTreeModel) getTreeModel()).refreshNodes();
+        panelFillers.forEach((k, v) -> v.complete());
+    }
+
+    public void addInputTable(TableModel tableModel) {
+        JTable table = new JTable(tableModel);
+
+        int columnCount = table.getColumnModel().getColumnCount();
+        for (int i = 0; i < columnCount; i++) {
+            table.getColumnModel().getColumn(i).setMinWidth(i == 0 ? 200 : 100);
+            table.getColumnModel().getColumn(i).setWidth(i == 0 ? 200 : 100);
+            table.getColumnModel().getColumn(i).setMaxWidth(i == 0 ? 200 : 100);
+            table.getColumnModel().getColumn(i).setPreferredWidth(i == 0 ? 200 : 100);
+        }
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setFillsViewportHeight(true);
+        inputArrayScrollPane.setViewportView(table);
+
+    }
+
+    public void setBtnToExcelState(boolean b) {
+        btnSaveToExcel.setEnabled(b);
     }
 }

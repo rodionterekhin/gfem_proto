@@ -1,12 +1,10 @@
 package ru.gazpromneft.gfemproto.model;
 
-import org.apache.commons.io.FileUtils;
 import ru.gazpromneft.gfemproto.Conventions;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CalculationSchema implements Serializable {
     protected ExcelModel model;
@@ -15,13 +13,12 @@ public class CalculationSchema implements Serializable {
     // Macroparameters macroparameters;
     // Parameters parameters;
     protected OutputData result;
-    private boolean actualResult;
-    private File file;
+    private double calculationTime;
+    private byte[] workbookCaptureByteArray;
 
     public CalculationSchema(ExcelModel model, InputData inputData) {
         this.data = inputData;
         this.model = model;
-        this.actualResult = false;
     }
 
     public CalculationSchema(InputData inputData) {
@@ -37,9 +34,9 @@ public class CalculationSchema implements Serializable {
             return "" + this.data + ": " + Conventions.EMPTY_MODEL;
     }
 
-    protected void setResult(OutputData result) {
+    protected void setResult(OutputData result, double calculationTime) {
         this.result = result;
-        this.actualResult = true;
+        this.calculationTime = calculationTime;
     }
 
     public OutputData getResult() {
@@ -50,8 +47,8 @@ public class CalculationSchema implements Serializable {
         return result != null;
     }
 
-    public boolean isResultActual() {
-        return this.actualResult;
+    public double getCalculationTime() {
+        return calculationTime;
     }
 
     public InputData getInputData() {
@@ -63,22 +60,24 @@ public class CalculationSchema implements Serializable {
     }
 
     public void setModel(ExcelModel model) {
-        this.actualResult = false;
-        this.model = model;
+        if (this.model != model) {
+            this.result = null;
+            this.model = model;
+        }
+
     }
 
     protected void freezeToExcel() {
-        if (!isCompleted() || !isResultActual()) {
+        if (!isCompleted()) {
             return;
         } else {
-            FileOutputStream out = null;
+            ByteArrayOutputStream out = null;
             try {
-                File tempFile = File.createTempFile("prefix-", "-suffix");
-                tempFile.deleteOnExit();
-                out = new FileOutputStream(tempFile);
+                out = new ByteArrayOutputStream();
                 this.model.workbook.get().write(out);
+                out.flush();
                 out.close();
-                this.file = tempFile;
+                this.workbookCaptureByteArray = out.toByteArray();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -86,10 +85,14 @@ public class CalculationSchema implements Serializable {
     }
 
     public void saveToFile(File file) throws IOException {
-        if (!isCompleted() || !isResultActual()) {
+        if (!isCompleted()) {
             return;
         } else {
-            FileUtils.copyFile(this.file, file);
+            try (FileOutputStream fos = new FileOutputStream(file)) {
+                fos.write(workbookCaptureByteArray);
+            } catch (IOException e) {
+                Logger.getLogger(getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+            }
         }
     }
 }

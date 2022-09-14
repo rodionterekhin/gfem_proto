@@ -16,7 +16,7 @@ public class OutputDataFactory {
 
 
     private static HashMap<String, Object> parseToMap(Sheet sheet) throws OutputDataCreationException {
-        List<Double> currentIndex = null;
+        List<Number> currentIndex = null;
         HashMap<String, Object> parseResult = new HashMap<>();
         for (Row r: sheet) {
             if (r.getRowNum() == 0)
@@ -38,8 +38,8 @@ public class OutputDataFactory {
                 currentIndex = IndexedUtils.parseArray(r);
             }
             else if (type == Conventions.VariableType.ARRAY) {
-                HashMap<Double, Double> array = new HashMap<>();
-                List<Double> finalData = IndexedUtils.parseArray(r);
+                HashMap<Number, Number> array = new HashMap<>();
+                List<Number> finalData = IndexedUtils.parseArray(r);
                 if (Objects.isNull(currentIndex)) {
                     String msg = "Строка " +
                             (r.getRowNum() + 1) +
@@ -47,7 +47,7 @@ public class OutputDataFactory {
                             "Массив не может идти перед индексом!";
                     throw new OutputDataCreationException(msg);
                 }
-                List<Double> finalCurrentIndex = currentIndex;
+                List<Number> finalCurrentIndex = currentIndex;
                 currentIndex.forEach((k) ->
                         array.put(k,
                                 finalCurrentIndex.indexOf(k) < finalData.size()?

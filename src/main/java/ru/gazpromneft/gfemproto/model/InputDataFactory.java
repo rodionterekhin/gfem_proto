@@ -13,6 +13,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static ru.gazpromneft.gfemproto.Conventions.RELATIVE_TOLERANCE;
+
 public class InputDataFactory {
     private static final Logger logger = Logger.getLogger(ExcelModelFactory.class.getName());
 
@@ -40,7 +42,7 @@ public class InputDataFactory {
     }
 
     private static HashMap<String, Object> parseToMap(Sheet sheet) throws InputDataLoadException {
-        List<Double> currentIndex = null;
+        List<Number> currentIndex = null;
         HashMap<String, Object> parseResult = new HashMap<>();
         for (Row r: sheet) {
             if (r.getRowNum() == 0)
@@ -56,14 +58,18 @@ public class InputDataFactory {
                 throw new InputDataLoadException(msg);
             }
             if (type == Conventions.VariableType.NUMERIC) {
-                parseResult.put(name, r.getCell(2).getNumericCellValue());
+                Number value = r.getCell(2).getNumericCellValue();
+                if (Math.abs(value.intValue() - value.doubleValue()) < RELATIVE_TOLERANCE)
+                    parseResult.put(name, value.intValue());
+                else
+                    parseResult.put(name, value.doubleValue());
             }
             else if (type == Conventions.VariableType.INDEX) {
                 currentIndex = IndexedUtils.parseArray(r);
             }
             else if (type == Conventions.VariableType.ARRAY) {
-                HashMap<Double, Double> array = new HashMap<>();
-                List<Double> finalData = IndexedUtils.parseArray(r);
+                HashMap<Number, Number> array = new HashMap<>();
+                List<Number> finalData = IndexedUtils.parseArray(r);
                 if (Objects.isNull(currentIndex)) {
                     String msg = "Строка " +
                             (r.getRowNum() + 1) +
@@ -71,7 +77,7 @@ public class InputDataFactory {
                             "Массив не может идти перед индексом!";
                     throw new InputDataLoadException(msg);
                 }
-                List<Double> finalCurrentIndex = currentIndex;
+                List<Number> finalCurrentIndex = currentIndex;
                 currentIndex.forEach((k) ->
                         array.put(k,
                                 finalCurrentIndex.indexOf(k) < finalData.size()?
