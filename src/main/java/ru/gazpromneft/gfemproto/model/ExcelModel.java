@@ -151,8 +151,8 @@ public class ExcelModel implements Serializable {
             else if (type == Conventions.VariableType.ARRAY) {
                 assert currentIndex != null;
                 Object value = data.asMap().get(name);
-                if (value instanceof Map<?, ?> values_uncast) {
-                    Map<Number, Number> values = (Map<Number, Number>) values_uncast;
+                if (value instanceof Map<?, ?>) {
+                    Map<Number, Number> values = (Map<Number, Number>) value;
                     IndexedUtils.fillArray(r, IndexedUtils.sequenceFromArray(currentIndex, values));
                 }
             }

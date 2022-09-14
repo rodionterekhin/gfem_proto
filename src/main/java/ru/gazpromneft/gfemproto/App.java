@@ -187,8 +187,9 @@ public class App implements IMainController {
     @Override
     public void calculate() {
         if (selectedNode != null) {
-            if (!(selectedNode.getUserObject() instanceof CalculationSchema calculationSchema))
+            if (!(selectedNode.getUserObject() instanceof CalculationSchema))
                 return;
+            CalculationSchema calculationSchema = (CalculationSchema) selectedNode.getUserObject();
             if (Objects.isNull(calculationSchema.getModel()))
                 return;
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
@@ -242,7 +243,8 @@ public class App implements IMainController {
             return;
         }
         Object uncastObject = selectedNode.getUserObject();
-        if (uncastObject instanceof CalculationSchema selectedSchema) {
+        if (uncastObject instanceof CalculationSchema) {
+            CalculationSchema selectedSchema = (CalculationSchema) uncastObject;
             showAllModelsInComboBox();
             Object shouldSelect = selectedSchema.getModel();
             if (Objects.isNull(shouldSelect))
