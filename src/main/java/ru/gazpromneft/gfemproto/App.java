@@ -53,6 +53,7 @@ public class App implements IMainController {
         Image icon = getAppIcon();
         tryRegisterSLN();
         gui = new GfemGUI(this, icon);
+       //
         tryLoadState();
         SwingUtilities.invokeLater(this::refresh);
         gui.setVisible(true);
@@ -73,6 +74,7 @@ public class App implements IMainController {
             }
         } else {
             logger.info("No state file found. Assuming this is the first time the application is opened");
+            gui.setTreeModel(new ExcelTreeModel());
         }
     }
 
