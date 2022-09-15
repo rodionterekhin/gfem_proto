@@ -58,8 +58,8 @@
   </dependencies>
 
   <scm>
-    <connection>scm:git:http://127.0.0.1/dummy</connection>
-    <developerConnection>scm:git:https://127.0.0.1/dummy</developerConnection>
+    <connection>scm:svn:http://127.0.0.1/dummy</connection>
+    <developerConnection>scm:svn:https://127.0.0.1/dummy</developerConnection>
     <tag>HEAD</tag>
     <url>http://127.0.0.1/dummy</url>
   </scm>
@@ -73,6 +73,7 @@
           <version>3.0.0</version>
           <executions>
             <execution>
+              <id>buildnumber</id>
               <phase>validate</phase>
               <goals>
                 <goal>create</goal>
@@ -80,8 +81,13 @@
             </execution>
           </executions>
           <configuration>
-            <doCheck>true</doCheck>
-            <doUpdate>true</doUpdate>
+            <format>{0,number}</format>
+            <items>
+              <item>buildNumber</item>
+            </items>
+            <doCheck>false</doCheck>
+            <doUpdate>false</doUpdate>
+            <revisionOnScmFailure>unknownbuild</revisionOnScmFailure>
           </configuration>
         </plugin>
         <plugin>
