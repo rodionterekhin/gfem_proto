@@ -1,5 +1,6 @@
 package ru.gazpromneft.gfemproto.gui;
 
+import ru.gazpromneft.gfemproto.App;
 import ru.gazpromneft.gfemproto.Conventions;
 import ru.gazpromneft.gfemproto.UTF8Control;
 
@@ -13,8 +14,9 @@ import java.util.logging.Logger;
 
 public class BasicGUI extends JFrame {
     protected final Logger logger;
+
     public BasicGUI() {
-        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
+        setTitle(App.getStrings().getString("application.name"));
         logger = Logger.getLogger(this.getClass().getName());
         fc.addChoosableFileFilter(excelFileFilter);
         fc.setAcceptAllFileFilterUsed(false);
@@ -30,17 +32,16 @@ public class BasicGUI extends JFrame {
             String path = f.getName();
             int i = path.lastIndexOf('.');
 
-            if (i > 0 &&  i < path.length() - 1) {
-                extension = path.substring(i+1).toLowerCase();
+            if (i > 0 && i < path.length() - 1) {
+                extension = path.substring(i + 1).toLowerCase();
             }
-            if (Objects.isNull(extension))
-                return false;
+            if (Objects.isNull(extension)) return false;
             return extension.equals("xlsx") || extension.equals("xlsm");
         }
 
         @Override
         public String getDescription() {
-            return ResourceBundle.getBundle("strings", new UTF8Control()).getString("dialog.filter.description");
+            return App.getStrings().getString("dialog.filter.description");
         }
     };
 
@@ -61,16 +62,12 @@ public class BasicGUI extends JFrame {
     }
 
     public void showInfo(String message) {
-        JOptionPane.showMessageDialog(new JFrame(),
-                message,
-                ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"),
-                JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(new JFrame(), message, ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"), JOptionPane.INFORMATION_MESSAGE);
     }
 
 
     public void showError(String message) {
-        JOptionPane.showMessageDialog(new JFrame(), message, "Ошибка",
-                JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(new JFrame(), message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     public File saveFileDialog(String title) {

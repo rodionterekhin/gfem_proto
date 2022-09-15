@@ -6,7 +6,7 @@
 
   <groupId>ru.gazpromneft.gfemproto</groupId>
   <artifactId>gfem_proto</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1</version>
 
   <name>gfem_proto</name>
   <url>gazprom-neft.ru</url>
@@ -57,9 +57,33 @@
     </dependency>
   </dependencies>
 
+  <scm>
+    <connection>scm:git:http://127.0.0.1/dummy</connection>
+    <developerConnection>scm:git:https://127.0.0.1/dummy</developerConnection>
+    <tag>HEAD</tag>
+    <url>http://127.0.0.1/dummy</url>
+  </scm>
+
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>buildnumber-maven-plugin</artifactId>
+          <version>3.0.0</version>
+          <executions>
+            <execution>
+              <phase>validate</phase>
+              <goals>
+                <goal>create</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <doCheck>true</doCheck>
+            <doUpdate>true</doUpdate>
+          </configuration>
+        </plugin>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <configuration>
@@ -74,6 +98,8 @@
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
+<!--            <finalName>${project.artifactId}-${project.version}.${buildNumber}-full</finalName>-->
+            <appendAssemblyId>false</appendAssemblyId>
           </configuration>
         </plugin>
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
@@ -105,8 +131,10 @@
             <archive>
               <manifestEntries>
                 <SplashScreen-Image>/splash.jpg</SplashScreen-Image>
+                <Implementation-Build>${buildNumber}</Implementation-Build>
               </manifestEntries>
               <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                 <addClasspath>true</addClasspath>
                 <mainClass>ru.gazpromneft.gfemproto.App</mainClass>
               </manifest>
@@ -132,5 +160,6 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <finalName>${project.artifactId}-${project.version}.${buildNumber}</finalName>
   </build>
 </project>

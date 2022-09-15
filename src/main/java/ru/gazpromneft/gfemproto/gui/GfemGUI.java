@@ -3,6 +3,7 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import ru.gazpromneft.gfemproto.App;
 import ru.gazpromneft.gfemproto.ExcelTreeModel;
 import ru.gazpromneft.gfemproto.UTF8Control;
 
@@ -55,7 +56,8 @@ public class GfemGUI extends BasicGUI {
 
     public GfemGUI(IMainController controller, Image icon) {
         this.controller = controller;
-        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
+        controller.setUI(this);
+        setTitle(App.getStrings().getString("application.name"));
         setContentPane(mainPanel);
         pack();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);

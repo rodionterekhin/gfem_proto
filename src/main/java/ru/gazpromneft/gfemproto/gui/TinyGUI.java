@@ -3,6 +3,7 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import ru.gazpromneft.gfemproto.App;
 import ru.gazpromneft.gfemproto.Conventions;
 import ru.gazpromneft.gfemproto.UTF8Control;
 
@@ -28,7 +29,7 @@ public class TinyGUI extends BasicGUI {
 
 
         this.controller = iController;
-        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
+        setTitle(App.getStrings().getString("application.name"));
         setContentPane(mainPanel);
         setResizable(false);
         pack();
@@ -43,7 +44,6 @@ public class TinyGUI extends BasicGUI {
         btnData.addActionListener((actionEvent) -> txtData.setText(controller.loadCase()));
         setVisible(true);
     }
-
 
 
     {

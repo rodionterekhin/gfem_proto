@@ -17,9 +17,9 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     private final DefaultMutableTreeNode modelsNode;
 
     public ExcelTreeModel() {
-        super(new DefaultMutableTreeNode(ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.root")));
-        String schemasNodeName = ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.data");
-        String modelsNodeName = ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.models");
+        super(new DefaultMutableTreeNode(App.getStrings().getString("tree.root")));
+        String schemasNodeName = App.getStrings().getString("tree.data");
+        String modelsNodeName = App.getStrings().getString("tree.models");
         schemasNode = new DefaultMutableTreeNode(schemasNodeName, true);
         modelsNode = new DefaultMutableTreeNode(modelsNodeName, true);
         ((DefaultMutableTreeNode) root).add(schemasNode);
