@@ -99,6 +99,8 @@
                 <SplashScreen-Image>splash.jpg</SplashScreen-Image>
                 <Implementation-Build>${buildNumber}</Implementation-Build>
                 <Build-Time>${maven.build.timestamp}</Build-Time>
+                <Build-User>${user.name}</Build-User>
+                <Build-Label>${project.version} (build ${buildNumber})</Build-Label>
               </manifestEntries>
               <manifest>
                 <mainClass>ru.gazpromneft.gfemproto.App</mainClass>

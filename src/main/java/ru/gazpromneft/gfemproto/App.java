@@ -53,7 +53,7 @@ public class App {
         Attributes manifestEntries = getManifestAttributes();
         if (manifestEntries != null) {
             BUILD_TIME = manifestEntries.getValue("Build-Time");
-            BUILD_VERSION = manifestEntries.getValue("Implementation-Build");
+            BUILD_VERSION = manifestEntries.getValue("Build-Label");
         } else {
             BUILD_TIME = "undefined";
             BUILD_VERSION = "undefined";
