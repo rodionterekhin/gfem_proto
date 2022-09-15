@@ -120,7 +120,11 @@ public class MainController implements IMainController {
 
     @Override
     public void about() {
-        gui.showInfo(strings.getString("application.info"));
+        String buildVersion = App.getInstance().BUILD_VERSION;
+        String buildTime = App.getInstance().BUILD_TIME;
+        String mainString = strings.getString("application.info");
+        String text = String.format(mainString, buildVersion, buildTime);
+        gui.showInfo(text);
     }
 
     @Override

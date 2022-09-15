@@ -3,29 +3,21 @@ package ru.gazpromneft.gfemproto;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.formula.WorkbookEvaluator;
-import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import ru.gazpromneft.gfemproto.gui.GfemGUI;
 import ru.gazpromneft.gfemproto.gui.IMainController;
-import ru.gazpromneft.gfemproto.model.*;
 
 import javax.swing.*;
-import javax.swing.table.TableModel;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.io.*;
 
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.nio.channels.OverlappingFileLockException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,11 +43,24 @@ public class App {
     private Image appIcon = null;
     private IMainController controller = null;
     private static App instance = null;
+    public final String BUILD_TIME;
+    public final String BUILD_VERSION;
 
     public App() {
         instance = this;
-        ExcelTreeSaver.configure(LOCK_WAITING_PERIOD, TOTAL_LOCK_WAITING_TIME, TOTAL_LOCK_READING_WAITING_TIME);
         logger = Logger.getLogger(this.getClass().getName());
+
+        Attributes manifestEntries = getManifestAttributes();
+        if (manifestEntries != null) {
+            BUILD_TIME = manifestEntries.getValue("Build-Time");
+            BUILD_VERSION = manifestEntries.getValue("Implementation-Build");
+        } else {
+            BUILD_TIME = "undefined";
+            BUILD_VERSION = "undefined";
+        }
+
+        ExcelTreeSaver.configure(LOCK_WAITING_PERIOD, TOTAL_LOCK_WAITING_TIME, TOTAL_LOCK_READING_WAITING_TIME);
+
         FlatIntelliJLaf.setup();
         Image icon = getAppIcon();
         tryRegisterSLN();
@@ -66,6 +71,22 @@ public class App {
         SwingUtilities.invokeLater(controller::refresh);
         gui.setVisible(true);
         gui.setStatus(strings.getString("status.idle"));
+    }
+
+    private Attributes getManifestAttributes() {
+        String className = getClass().getSimpleName() + ".class";
+        String classPath = Objects.requireNonNull(getClass().getResource(className)).toString();
+        if (!classPath.startsWith("jar")) {
+            return null;
+        }
+        try {
+            URL url = new URL(classPath);
+            JarURLConnection jarConnection = (JarURLConnection) url.openConnection();
+            Manifest manifest = jarConnection.getManifest();
+            return manifest.getMainAttributes();
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     public static App getInstance() {

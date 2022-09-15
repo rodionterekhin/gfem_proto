@@ -57,7 +57,7 @@ public class GfemGUI extends BasicGUI {
     public GfemGUI(IMainController controller, Image icon) {
         this.controller = controller;
         controller.setUI(this);
-        setTitle(App.getStrings().getString("application.name"));
+        setTitle(App.getStrings().getString("application.name") + " " + App.getInstance().BUILD_VERSION);
         setContentPane(mainPanel);
         pack();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
