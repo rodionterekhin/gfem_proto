@@ -3,8 +3,8 @@ package ru.gazpromneft.gfemproto.gui;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-import ru.gazpromneft.gfemproto.Conventions;
 import ru.gazpromneft.gfemproto.ExcelTreeModel;
+import ru.gazpromneft.gfemproto.UTF8Control;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -55,7 +55,7 @@ public class GfemGUI extends BasicGUI {
 
     public GfemGUI(IMainController controller, Image icon) {
         this.controller = controller;
-        setTitle(Conventions.APPLICATION_NAME);
+        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
         setContentPane(mainPanel);
         pack();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -74,9 +74,9 @@ public class GfemGUI extends BasicGUI {
         mnuFile.add(mniExit);
 
         mnuEdit = new JMenu(this.$$$getMessageFromBundle$$$("strings", "menu.edit"));
-        mniLoadModel = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "add.model"));
+        mniLoadModel = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "open.model"));
         mniLoadModel.addActionListener((ActionEvent ae) -> controller.loadModel());
-        mniLoadData = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "add.input_data"));
+        mniLoadData = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "open.data"));
         mniLoadData.addActionListener((ActionEvent ae) -> controller.loadCase());
         mnuEdit.add(mniLoadModel);
         mnuEdit.add(mniLoadData);
@@ -261,10 +261,10 @@ public class GfemGUI extends BasicGUI {
         dataStructurePanel.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
         mainPanel.add(dataStructurePanel, new GridConstraints(2, 1, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(300, -1), new Dimension(300, -1), new Dimension(300, -1), 0, false));
         btnAddModel = new JButton();
-        this.$$$loadButtonText$$$(btnAddModel, this.$$$getMessageFromBundle$$$("strings", "add.model"));
+        this.$$$loadButtonText$$$(btnAddModel, this.$$$getMessageFromBundle$$$("strings", "open.model"));
         dataStructurePanel.add(btnAddModel, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnAddCase = new JButton();
-        this.$$$loadButtonText$$$(btnAddCase, this.$$$getMessageFromBundle$$$("strings", "add.input_data"));
+        this.$$$loadButtonText$$$(btnAddCase, this.$$$getMessageFromBundle$$$("strings", "open.data"));
         dataStructurePanel.add(btnAddCase, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer10 = new Spacer();
         dataStructurePanel.add(spacer10, new GridConstraints(1, 0, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, 1, new Dimension(5, -1), new Dimension(5, -1), new Dimension(5, -1), 0, false));

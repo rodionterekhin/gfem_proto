@@ -8,28 +8,31 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.ResourceBundle;
 
 
 public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
 
-    private final DefaultMutableTreeNode casesNode;
+    private final DefaultMutableTreeNode schemasNode;
     private final DefaultMutableTreeNode modelsNode;
 
     public ExcelTreeModel() {
-        super(new DefaultMutableTreeNode("Данные проекта"));
-        casesNode = new DefaultMutableTreeNode("Кейсы", true);
-        modelsNode = new DefaultMutableTreeNode("Модели", true);
-        ((DefaultMutableTreeNode) root).add(casesNode);
+        super(new DefaultMutableTreeNode(ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.root")));
+        String schemasNodeName = ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.data");
+        String modelsNodeName = ResourceBundle.getBundle("strings", new UTF8Control()).getString("tree.models");
+        schemasNode = new DefaultMutableTreeNode(schemasNodeName, true);
+        modelsNode = new DefaultMutableTreeNode(modelsNodeName, true);
+        ((DefaultMutableTreeNode) root).add(schemasNode);
         ((DefaultMutableTreeNode) root).add(modelsNode);
         reload(modelsNode);
 
     }
 
-    public void addCaseNode(Object obj) {
+    public void addSchemaNode(Object obj) {
         DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(obj);
-        casesNode.add(newNode);
+        schemasNode.add(newNode);
 
-        reload(casesNode);
+        reload(schemasNode);
     }
 
     public void addModelNode(Object obj) {
@@ -40,11 +43,11 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
         reload(modelsNode);
     }
 
-    private void deleteCaseNode(MutableTreeNode obj) {
-        if (!casesContain(obj))
+    private void deleteSchemaNode(MutableTreeNode obj) {
+        if (!schemasContain(obj))
             throw new IllegalArgumentException("Node not registered!");
-        casesNode.remove(obj);
-        reload(casesNode);
+        schemasNode.remove(obj);
+        reload(schemasNode);
     }
 
     private void deleteModelNode(MutableTreeNode obj) {
@@ -64,8 +67,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
         return false;
     }
 
-    public boolean casesContain(Object obj) {
-        for (Enumeration<TreeNode> it = casesNode.children(); it.hasMoreElements(); ) {
+    public boolean schemasContain(Object obj) {
+        for (Enumeration<TreeNode> it = schemasNode.children(); it.hasMoreElements(); ) {
             DefaultMutableTreeNode tn = (DefaultMutableTreeNode) it.nextElement();
             if (tn.getUserObject().toString().equals(obj.toString()))
                 return true;
@@ -74,8 +77,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     }
 
     public void deleteNode(DefaultMutableTreeNode selectedNode) {
-        if (casesContain(selectedNode)) {
-            deleteCaseNode(selectedNode);
+        if (schemasContain(selectedNode)) {
+            deleteSchemaNode(selectedNode);
         } else if (modelsContain(selectedNode)) {
             deleteModelNode(selectedNode);
         } else {
@@ -87,8 +90,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
         return getObjects(modelsNode);
     }
 
-    public List<Object> getCases() {
-        return getObjects(casesNode);
+    public List<Object> getSchemas() {
+        return getObjects(schemasNode);
     }
 
     protected List<Object> getObjects(DefaultMutableTreeNode treeNode) {
@@ -102,8 +105,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     }
 
     public void refreshNodes() {
-        casesNode.children();
-        Enumeration<TreeNode> it = casesNode.children();
+        schemasNode.children();
+        Enumeration<TreeNode> it = schemasNode.children();
         while (it.hasMoreElements()) {
             TreeNode node = it.nextElement();
             reload(node);

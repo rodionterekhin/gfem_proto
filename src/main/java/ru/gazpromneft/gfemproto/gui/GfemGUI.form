@@ -38,7 +38,7 @@
                       <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="Параметры расчета"/>
+                      <text resource-bundle="strings" key="calculation.params"/>
                     </properties>
                   </component>
                   <component id="5240a" class="javax.swing.JLabel">
@@ -46,7 +46,7 @@
                       <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="Массивы"/>
+                      <text resource-bundle="strings" key="calculation.entries"/>
                     </properties>
                   </component>
                   <vspacer id="c3935">
@@ -129,7 +129,7 @@
                       <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="КПЭ"/>
+                      <text resource-bundle="strings" key="calculation.kpe"/>
                     </properties>
                   </component>
                   <component id="f98c3" class="javax.swing.JLabel">
@@ -137,7 +137,7 @@
                       <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
-                      <text value="Массивы"/>
+                      <text resource-bundle="strings" key="calculation.entries"/>
                     </properties>
                   </component>
                   <vspacer id="87b10">
@@ -200,7 +200,7 @@
               <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Рассчитать"/>
+              <text resource-bundle="strings" key="calculate"/>
             </properties>
           </component>
           <hspacer id="9d23f">
@@ -228,7 +228,7 @@
             </constraints>
             <properties>
               <enabled value="false"/>
-              <text value="Выгрузка в эксель..."/>
+              <text resource-bundle="strings" key="save.result.to.excel"/>
             </properties>
           </component>
         </children>
@@ -258,7 +258,7 @@
               <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Добавить модель..."/>
+              <text resource-bundle="strings" key="open.model"/>
             </properties>
           </component>
           <component id="c764d" class="javax.swing.JButton" binding="btnAddCase">
@@ -266,7 +266,7 @@
               <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Добавить кейс..."/>
+              <text resource-bundle="strings" key="open.data"/>
             </properties>
           </component>
           <hspacer id="1e480">
@@ -301,7 +301,7 @@
               <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Удалить элемент"/>
+              <text resource-bundle="strings" key="delete.element"/>
             </properties>
           </component>
           <component id="6e1ac" class="javax.swing.JButton" binding="btnCreateDuplicate">
@@ -309,7 +309,7 @@
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
-              <text value="Дублировать элемент"/>
+              <text resource-bundle="strings" key="duplicate.element"/>
             </properties>
           </component>
           <component id="57da1" class="javax.swing.JSeparator">
@@ -381,16 +381,15 @@
           <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="Модель для расчета:"/>
+          <labelFor value="ab57f"/>
+          <text resource-bundle="strings" key="selected.model.label"/>
         </properties>
       </component>
       <component id="ab57f" class="javax.swing.JComboBox" binding="cmbSelectedModel">
         <constraints>
           <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties>
-          <name value="Модель"/>
-        </properties>
+        <properties/>
       </component>
       <vspacer id="bcfaf">
         <constraints>
@@ -419,9 +418,7 @@
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
-            <properties>
-              <text value="Готово"/>
-            </properties>
+            <properties/>
           </component>
           <hspacer id="813">
             <constraints>

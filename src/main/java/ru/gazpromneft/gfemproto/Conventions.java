@@ -1,13 +1,12 @@
 package ru.gazpromneft.gfemproto;
 
+import java.util.ResourceBundle;
+
 // Файл описывает соглашения, принятые для работы программы
 public class Conventions {
     public static final String STATE_FILE_NAME = "data.bin";
-    public static final String EMPTY_MODEL = "(без модели)";
-    public static final String APPLICATION_NAME = "Гибкая ФЭМ";
-    public static final String ABOUT_MESSAGE = "Parsing Demo для ГФЭМ\nАвтор - Терехин Родион\nПАО \"Газпром нефть\", 2022";
+    public static final String EMPTY_MODEL = ResourceBundle.getBundle("strings", new UTF8Control()).getString("empty.model");
     public static final double RELATIVE_TOLERANCE = 1e-9;
-    public static final String FILE_FILTER_TEXT = "Книга Excel (*.xlsx;*.xlsm)";
     public static final String ICON_PATH = "/icon.png";
 
     public enum VariableType {

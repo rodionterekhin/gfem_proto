@@ -4,8 +4,10 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import ru.gazpromneft.gfemproto.Conventions;
+import ru.gazpromneft.gfemproto.UTF8Control;
 
 import java.awt.*;
+import java.util.ResourceBundle;
 import javax.swing.*;
 
 public class TinyGUI extends BasicGUI {
@@ -26,7 +28,7 @@ public class TinyGUI extends BasicGUI {
 
 
         this.controller = iController;
-        setTitle(Conventions.APPLICATION_NAME);
+        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
         setContentPane(mainPanel);
         setResizable(false);
         pack();

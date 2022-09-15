@@ -1,17 +1,20 @@
 package ru.gazpromneft.gfemproto.gui;
 
 import ru.gazpromneft.gfemproto.Conventions;
+import ru.gazpromneft.gfemproto.UTF8Control;
 
 import javax.swing.*;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BasicGUI extends JFrame {
     protected final Logger logger;
     public BasicGUI() {
+        setTitle(ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"));
         logger = Logger.getLogger(this.getClass().getName());
         fc.addChoosableFileFilter(excelFileFilter);
         fc.setAcceptAllFileFilterUsed(false);
@@ -37,12 +40,13 @@ public class BasicGUI extends JFrame {
 
         @Override
         public String getDescription() {
-            return Conventions.FILE_FILTER_TEXT;
+            return ResourceBundle.getBundle("strings", new UTF8Control()).getString("dialog.filter.description");
         }
     };
 
-    public File openFileDialog() {
+    public File openFileDialog(String title) {
         Logger logger = Logger.getLogger(TinyGUI.class.getName());
+        fc.setDialogTitle(title);
         int returnVal = fc.showOpenDialog(this);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -57,7 +61,9 @@ public class BasicGUI extends JFrame {
     }
 
     public void showInfo(String message) {
-        JOptionPane.showMessageDialog(new JFrame(), message, Conventions.APPLICATION_NAME,
+        JOptionPane.showMessageDialog(new JFrame(),
+                message,
+                ResourceBundle.getBundle("strings", new UTF8Control()).getString("application.name"),
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -67,8 +73,9 @@ public class BasicGUI extends JFrame {
                 JOptionPane.ERROR_MESSAGE);
     }
 
-    public File saveFileDialog() {
+    public File saveFileDialog(String title) {
         Logger logger = Logger.getLogger(TinyGUI.class.getName());
+        fc.setDialogTitle(title);
         int returnVal = fc.showSaveDialog(this);
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {

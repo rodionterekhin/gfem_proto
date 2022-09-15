@@ -8,7 +8,7 @@ public class Calculator {
             OutputData result = schema.model.calculate();
             double endTime = System.currentTimeMillis();
             schema.setResult(result, endTime - startTime);
-            schema.freezeToExcel();
+            schema.captureWorkbookToBytes();
             return schema;
         } catch (Exception e) {
             throw new CalculationError(e, schema);

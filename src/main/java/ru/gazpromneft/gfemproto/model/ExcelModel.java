@@ -183,13 +183,6 @@ public class ExcelModel implements Serializable {
                     .append(outputValue)
                     .append("\n");
         }
-        try {
-            FileOutputStream out = new FileOutputStream("result"+System.currentTimeMillis() + ".xlsx");
-            this.workbook.get().write(out);
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         OutputData result = OutputDataFactory.fromModel(this);
         result.setTextReport(report.toString());
         return result;

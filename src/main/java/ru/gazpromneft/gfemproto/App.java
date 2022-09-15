@@ -50,6 +50,7 @@ public class App implements IMainController {
     private List<List<Object>> tableData;
     private List<Number> tableIndex;
     private boolean canUseStateFile = true;
+    private final ResourceBundle strings = ResourceBundle.getBundle("strings", new UTF8Control());
 
     public App() {
         ExcelTreeSaver.configure(LOCK_WAITING_PERIOD,
@@ -64,7 +65,7 @@ public class App implements IMainController {
         tryLoadState();
         SwingUtilities.invokeLater(this::refresh);
         gui.setVisible(true);
-        gui.setStatus("Готово");
+        gui.setStatus(strings.getString("status.idle"));
     }
 
     private void tryLoadState() {
@@ -72,17 +73,17 @@ public class App implements IMainController {
             try {
                 gui.setTreeModel(loadState());
             } catch (OverlappingFileLockException e) {
-                gui.showError("Файл состояния используется другим процессом!");
-                gui.setStatusPrefix("Изменения не будут сохранены");
+                gui.showError(strings.getString("state.error.locked"));
+                gui.setStatusPrefix(strings.getString("state.error.status_prefix"));
                 logger.log(Level.SEVERE, e.getMessage(), e);
                 canUseStateFile = false;
                 gui.setTreeModel(new ExcelTreeModel());
             } catch (IOException e) {
-                gui.showError("Файл состояния повержден и не может быть восстановлен!");
+                gui.showError(strings.getString("state.error.corrupt"));
                 logger.log(Level.SEVERE, e.getMessage(), e);
                 gui.setTreeModel(new ExcelTreeModel());
             } catch (ClassNotFoundException e) {
-                gui.showError("Файл состояния предназначен для другой версии программы!");
+                gui.showError(strings.getString("state.error.classes"));
                 logger.log(Level.SEVERE, e.getMessage(), e);
                 gui.setTreeModel(new ExcelTreeModel());
             }
@@ -134,16 +135,16 @@ public class App implements IMainController {
 
     @Override
     public String loadModel() {
-        File modelFile = gui.openFileDialog();
+        File modelFile = gui.openFileDialog(strings.getString("dialog.open.model"));
         if (Objects.isNull(modelFile))
             return "";
         try {
             ExcelModel model = ExcelModelFactory.fromFile(modelFile);
             if (((ExcelTreeModel) gui.getTreeModel()).modelsContain(model))
-                throw new ModelLoadException("Выбранная модель уже загружена!");
+                throw new ModelLoadException(strings.getString("add.model.error.duplicate"));
             ((ExcelTreeModel) gui.getTreeModel()).addModelNode(model);
             showAllModelsInComboBox();
-            gui.setStatus("Загружена модель " + model);
+            gui.setStatus(strings.getString("status.add.model") + " " + model);
             return modelFile.getAbsolutePath();
         } catch (ModelLoadException | ModelValidationException e) {
             logger.warning(e.getMessage());
@@ -153,20 +154,20 @@ public class App implements IMainController {
     }
 
     public void copyFrom(CalculationSchema schema) {
-        ((ExcelTreeModel) gui.getTreeModel()).addCaseNode(new CalculationSchema(schema.getModel(), schema.getInputData()));
-        gui.setStatus("Дублирован кейс " + schema.getInputData());
+        ((ExcelTreeModel) gui.getTreeModel()).addSchemaNode(new CalculationSchema(schema.getModel(), schema.getInputData()));
+        gui.setStatus(strings.getString("status.duplicate.element") + " " + schema.getInputData());
     }
 
     @Override
     public String loadCase() {
-        File dataFile = gui.openFileDialog();
+        File dataFile = gui.openFileDialog(strings.getString("dialog.open.data"));
         if (Objects.isNull(dataFile))
             return "";
         try {
             InputData data = InputDataFactory.fromFile(dataFile);
             CalculationSchema schema = new CalculationSchema(null, data);
-            ((ExcelTreeModel) gui.getTreeModel()).addCaseNode(schema);
-            gui.setStatus("Загружен кейс " + data);
+            ((ExcelTreeModel) gui.getTreeModel()).addSchemaNode(schema);
+            gui.setStatus(strings.getString("status.add.data") + " " + data);
             return dataFile.getAbsolutePath();
         } catch (InputDataLoadException e) {
             logger.warning(e.getMessage());
@@ -209,7 +210,7 @@ public class App implements IMainController {
             logger.info("Calculation requested for data \"" + selectedNode + "\"");
             Supplier<CalculationSchema> calculationSupplier = () -> {
                 logger.info("Scheduled calculation for schema " + calculationSchema);
-                gui.setStatus("Выполняю расчет " + calculationSchema);
+                gui.setStatus(strings.getString("status.calculating") + " " + calculationSchema);
                 return Calculator.calculate(calculationSchema);
             };
             CompletableFuture.supplyAsync(calculationSupplier)
@@ -324,7 +325,7 @@ public class App implements IMainController {
 
     @Override
     public void about() {
-        gui.showInfo(Conventions.ABOUT_MESSAGE);
+        gui.showInfo(strings.getString("application.info"));
     }
 
     @Override
@@ -376,7 +377,7 @@ public class App implements IMainController {
         Object data = selectedNode.getUserObject();
         if (data instanceof CalculationSchema) {
             CalculationSchema selectedSchema = (CalculationSchema) data;
-            File destination = gui.saveFileDialog();
+            File destination = gui.saveFileDialog(strings.getString("dialog.save.model_with_data"));
             if (Objects.isNull(destination))
                 return;
             if (!destination.getAbsolutePath().endsWith(".xlsx"))

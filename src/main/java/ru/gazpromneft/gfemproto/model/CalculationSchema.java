@@ -64,7 +64,7 @@ public class CalculationSchema implements Serializable {
 
     }
 
-    protected void freezeToExcel() {
+    protected void captureWorkbookToBytes() {
         if (!isCompleted()) {
             return;
         } else {
