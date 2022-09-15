@@ -7,7 +7,7 @@ public class OutputData implements Serializable {
 
 
     private String textReport;
-    private HashMap<String, Object> map;
+    private final HashMap<String, Object> map;
 
     protected OutputData(HashMap<String, Object> map) {
         this.map = map;

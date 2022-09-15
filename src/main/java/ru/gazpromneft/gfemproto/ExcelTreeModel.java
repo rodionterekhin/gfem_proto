@@ -6,7 +6,7 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Enumeration;
 import java.util.List;
 
 
@@ -56,8 +56,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
 
 
     public boolean modelsContain(Object obj) {
-        for (Iterator<TreeNode> it = modelsNode.children().asIterator(); it.hasNext(); ) {
-            DefaultMutableTreeNode tn = (DefaultMutableTreeNode) it.next();
+        for (Enumeration<TreeNode> it = modelsNode.children(); it.hasMoreElements(); ) {
+            DefaultMutableTreeNode tn = (DefaultMutableTreeNode) it.nextElement();
             if (tn.getUserObject().toString().equals(obj.toString()))
                 return true;
         }
@@ -65,8 +65,8 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
     }
 
     public boolean casesContain(Object obj) {
-        for (Iterator<TreeNode> it = casesNode.children().asIterator(); it.hasNext(); ) {
-            DefaultMutableTreeNode tn = (DefaultMutableTreeNode) it.next();
+        for (Enumeration<TreeNode> it = casesNode.children(); it.hasMoreElements(); ) {
+            DefaultMutableTreeNode tn = (DefaultMutableTreeNode) it.nextElement();
             if (tn.getUserObject().toString().equals(obj.toString()))
                 return true;
         }
@@ -93,14 +93,19 @@ public class ExcelTreeModel extends DefaultTreeModel implements Serializable {
 
     protected List<Object> getObjects(DefaultMutableTreeNode treeNode) {
         List<Object> list = new ArrayList<>();
-        treeNode.children().asIterator().forEachRemaining((tn) ->
-                list.add(((DefaultMutableTreeNode)tn).getUserObject()));
+        Enumeration<TreeNode> it = treeNode.children();
+        while (it.hasMoreElements()) {
+            TreeNode tn = it.nextElement();
+            list.add(((DefaultMutableTreeNode)tn).getUserObject());
+        }
         return list;
     }
 
     public void refreshNodes() {
-        for (Iterator<TreeNode> it = casesNode.children().asIterator(); it.hasNext(); ) {
-            TreeNode node = it.next();
+        casesNode.children();
+        Enumeration<TreeNode> it = casesNode.children();
+        while (it.hasMoreElements()) {
+            TreeNode node = it.nextElement();
             reload(node);
         }
     }

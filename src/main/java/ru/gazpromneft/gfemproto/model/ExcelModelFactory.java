@@ -7,9 +7,10 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import ru.gazpromneft.gfemproto.Conventions;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,7 +21,7 @@ public class ExcelModelFactory {
     public static ExcelModel fromFile(File file) throws ModelLoadException, ModelValidationException {
         try {
             String path = file.getAbsolutePath();
-            InputStream fis = new FileInputStream(path);
+            InputStream fis = Files.newInputStream(Paths.get(path));
             Workbook wb;
             if (path.endsWith(".xlsx") || path.endsWith(".xls")) {
                 wb = WorkbookFactory.create(fis);

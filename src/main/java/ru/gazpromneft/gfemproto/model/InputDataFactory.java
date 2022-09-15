@@ -6,9 +6,10 @@ import org.apache.poi.ss.util.CellAddress;
 import ru.gazpromneft.gfemproto.Conventions;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,7 +22,7 @@ public class InputDataFactory {
     public static InputData fromFile(File file) throws InputDataLoadException {
         try {
             String path = file.getAbsolutePath();
-            InputStream fis = new FileInputStream(path);
+            InputStream fis = Files.newInputStream(Paths.get(path));
             Workbook wb;
             if (path.endsWith(".xlsx") || path.endsWith(".xls")) {
                 wb = WorkbookFactory.create(fis);

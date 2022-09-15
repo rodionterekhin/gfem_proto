@@ -41,20 +41,6 @@ public class BasicGUI extends JFrame {
         }
     };
 
-    public static void updateLookAndFeel() {
-        Logger logger = Logger.getLogger(BasicGUI.class.getName());
-        try {
-            logger.log(Level.INFO, "Trying to install system look and feel...");
-            logger.log(Level.INFO, "Installing " + UIManager.getSystemLookAndFeelClassName() + " look and feel");
-            UIManager.setLookAndFeel(
-                    UIManager.getSystemLookAndFeelClassName());
-        } catch (UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException |
-                 ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Cannot install system look and feel!");
-
-        }
-    }
-
     public File openFileDialog() {
         Logger logger = Logger.getLogger(TinyGUI.class.getName());
         int returnVal = fc.showOpenDialog(this);

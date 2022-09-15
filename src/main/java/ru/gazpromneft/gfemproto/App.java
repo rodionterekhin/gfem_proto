@@ -17,6 +17,7 @@ import java.awt.*;
 import java.io.*;
 
 import java.net.URL;
+import java.nio.channels.OverlappingFileLockException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -37,32 +38,45 @@ import java.util.logging.Logger;
 
 public class App implements IMainController {
 
+    private static final int LOCK_WAITING_PERIOD = 1;       // seconds
+    private static final int TOTAL_LOCK_WAITING_TIME = 15;  // seconds
+    private static final int TOTAL_LOCK_READING_WAITING_TIME = 5;  // seconds
     private final Object EMPTY_MODEL = Conventions.EMPTY_MODEL;
 
     private final GfemGUI gui;
     private final Logger logger;
     private DefaultMutableTreeNode selectedNode;
     private boolean comboBoxLock;
-    private TableModel tableModel;
     private List<List<Object>> tableData;
     private List<Number> tableIndex;
+    private boolean canUseStateFile = true;
 
     public App() {
+        ExcelTreeSaver.configure(LOCK_WAITING_PERIOD,
+                TOTAL_LOCK_WAITING_TIME,
+                TOTAL_LOCK_READING_WAITING_TIME);
         logger = Logger.getLogger(this.getClass().getName());
         FlatIntelliJLaf.setup();
         Image icon = getAppIcon();
         tryRegisterSLN();
         gui = new GfemGUI(this, icon);
-       //
+        //
         tryLoadState();
         SwingUtilities.invokeLater(this::refresh);
         gui.setVisible(true);
+        gui.setStatus("Готово");
     }
 
     private void tryLoadState() {
         if (loadStateExists()) {
             try {
                 gui.setTreeModel(loadState());
+            } catch (OverlappingFileLockException e) {
+                gui.showError("Файл состояния используется другим процессом!");
+                gui.setStatusPrefix("Изменения не будут сохранены");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+                canUseStateFile = false;
+                gui.setTreeModel(new ExcelTreeModel());
             } catch (IOException e) {
                 gui.showError("Файл состояния повержден и не может быть восстановлен!");
                 logger.log(Level.SEVERE, e.getMessage(), e);
@@ -219,7 +233,7 @@ public class App implements IMainController {
         }
         logger.info("Calculation done for schema " + schema + "");
         NumberFormat formatter = new DecimalFormat("#0");
-        gui.setStatus("Расчет " + schema + " выполнен (" + formatter.format(schema.getCalculationTime()) +  " мс)");
+        gui.setStatus("Расчет " + schema + " выполнен (" + formatter.format(schema.getCalculationTime()) + " мс)");
         refresh();
         logger.info(schema.getResult().asMap().toString());
         // mf.showInfo("Расчет " + schema + " выполнен");
@@ -255,7 +269,7 @@ public class App implements IMainController {
             for (Entry<String, Object> e : selectedSchema.getInputData().asMap().entrySet()) {
                 if (e.getValue() instanceof Number)
                     gui.addInputNumericEntry(e.getKey(), (Number) e.getValue());
-                else if (e.getValue() instanceof HashMap<?, ?> hashMap) {
+                else if (e.getValue() instanceof HashMap<?, ?>) {
                     addToTable(e.getKey(), (HashMap<Number, Number>) e.getValue());
                     // mf.addInputArrayEntry(e.getKey(), (HashMap<Number, Number>) hashMap);
                 }
@@ -297,11 +311,13 @@ public class App implements IMainController {
     }
 
     public void exit() {
-        try {
-            saveState();
-        } catch (Exception e) {
-            gui.showError("Невозможно сохранить модели и данные в файл!");
-            logger.log(Level.SEVERE, e.getMessage(), e);
+        if (canUseStateFile) {
+            try {
+                saveState();
+            } catch (Exception e) {
+                gui.showError("Невозможно сохранить модели и данные в файл!");
+                logger.log(Level.SEVERE, e.getMessage(), e);
+            }
         }
         System.exit(0);
     }
@@ -330,7 +346,8 @@ public class App implements IMainController {
         logger.log(Level.INFO, "Combobox action performed");
         if (selectedNode != null) {
             Object uncastObject = selectedNode.getUserObject();
-            if (uncastObject instanceof CalculationSchema selected) {
+            if (uncastObject instanceof CalculationSchema) {
+                CalculationSchema selected = (CalculationSchema) uncastObject;
                 if (Objects.isNull(gui.getComboboxSelected()))
                     gui.setComboboxSelected(EMPTY_MODEL);
                 if (gui.getComboboxSelected().equals(EMPTY_MODEL)) {
@@ -357,7 +374,8 @@ public class App implements IMainController {
         if (Objects.isNull(selectedNode))
             return;
         Object data = selectedNode.getUserObject();
-        if (data instanceof CalculationSchema selectedSchema) {
+        if (data instanceof CalculationSchema) {
+            CalculationSchema selectedSchema = (CalculationSchema) data;
             File destination = gui.saveFileDialog();
             if (Objects.isNull(destination))
                 return;
@@ -380,7 +398,7 @@ public class App implements IMainController {
         if (data instanceof CalculationSchema || data instanceof ExcelModel) {
             ((ExcelTreeModel) gui.getTreeModel()).deleteNode(selectedNode);
         } else {
-            logger.log(Level.INFO, "Trying to delete a non-user node, ha-ha");
+            logger.log(Level.INFO, "Trying to delete a non-user node");
             // Just chilling
         }
     }
@@ -393,18 +411,8 @@ public class App implements IMainController {
     }
 
     private void saveState() throws IOException {
-        logger.info("Started saving state");
-        FileOutputStream outputStream = new FileOutputStream(Conventions.STATE_FILE_NAME);
-        logger.info("Created file output stream");
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-        logger.info("Created object output stream");
-        // сохраняем дерево в файл
-        objectOutputStream.writeObject(gui.getTreeModel());
-        logger.info("Saved tree model to output stream");
-
-        //закрываем поток и освобождаем ресурсы
-        objectOutputStream.close();
-        logger.info("Closed output stream");
+        File file = new File(Conventions.STATE_FILE_NAME);
+        ExcelTreeSaver.toFile((ExcelTreeModel) gui.getTreeModel(), file);
     }
 
     private boolean loadStateExists() {
@@ -413,13 +421,9 @@ public class App implements IMainController {
     }
 
     private ExcelTreeModel loadState() throws IOException, ClassNotFoundException {
-        FileInputStream fileInputStream = new FileInputStream(Conventions.STATE_FILE_NAME);
-        ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-
-        ExcelTreeModel savedTreeModel = (ExcelTreeModel) objectInputStream.readObject();
-        objectInputStream.close();
-
-        return savedTreeModel;
+        File file = new File(Conventions.STATE_FILE_NAME);
+        return ExcelTreeSaver.fromFile(file);
     }
+
 
 }

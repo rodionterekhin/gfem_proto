@@ -183,9 +183,8 @@ public class ExcelModel implements Serializable {
                     .append(outputValue)
                     .append("\n");
         }
-        FileOutputStream out = null;
         try {
-            out = new FileOutputStream("result"+System.currentTimeMillis() + ".xlsx");
+            FileOutputStream out = new FileOutputStream("result"+System.currentTimeMillis() + ".xlsx");
             this.workbook.get().write(out);
             out.close();
         } catch (IOException e) {
@@ -214,10 +213,6 @@ public class ExcelModel implements Serializable {
 
     public boolean canUseInputData(InputData inputData) {
         return getInputDescriptor().equals(inputData.getDescriptor());
-    }
-
-    public void release() {
-
     }
 
     @Override

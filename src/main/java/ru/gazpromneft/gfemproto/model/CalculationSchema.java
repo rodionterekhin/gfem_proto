@@ -2,16 +2,18 @@ package ru.gazpromneft.gfemproto.model;
 
 import ru.gazpromneft.gfemproto.Conventions;
 
-import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 
 public class CalculationSchema implements Serializable {
     protected ExcelModel model;
-    protected InputData data;
+    protected final InputData data;
     // In the future, we can customize schema by adding following lines:
-    // Macroparameters macroparameters;
-    // Parameters parameters;
+    // macroparameters
+    // parameters
     protected OutputData result;
     private double calculationTime;
     private byte[] workbookCaptureByteArray;
@@ -19,11 +21,6 @@ public class CalculationSchema implements Serializable {
     public CalculationSchema(ExcelModel model, InputData inputData) {
         this.data = inputData;
         this.model = model;
-    }
-
-    public CalculationSchema(InputData inputData) {
-        this.data = inputData;
-        this.model = inputData.getAttachedModel();
     }
 
     @Override
@@ -71,9 +68,8 @@ public class CalculationSchema implements Serializable {
         if (!isCompleted()) {
             return;
         } else {
-            ByteArrayOutputStream out = null;
             try {
-                out = new ByteArrayOutputStream();
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
                 this.model.workbook.get().write(out);
                 out.flush();
                 out.close();
@@ -88,11 +84,9 @@ public class CalculationSchema implements Serializable {
         if (!isCompleted()) {
             return;
         } else {
-            try (FileOutputStream fos = new FileOutputStream(file)) {
-                fos.write(workbookCaptureByteArray);
-            } catch (IOException e) {
-                Logger.getLogger(getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
-            }
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(workbookCaptureByteArray);
+            fos.close();
         }
     }
 }

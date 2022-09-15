@@ -9,14 +9,14 @@ public class SerializableHSSFWorkbook extends SerializableWorkbook implements Se
     public SerializableHSSFWorkbook(HSSFWorkbook workbook) {
         super(workbook);
     }
-    @Serial
+    //@Serial
     private void writeObject(ObjectOutputStream out) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         workbook.write(baos);
         out.write(baos.toByteArray());
     }
 
-    @Serial
+    //@Serial
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         workbook = new HSSFWorkbook(in);
     }

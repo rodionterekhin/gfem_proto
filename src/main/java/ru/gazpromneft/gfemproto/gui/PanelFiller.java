@@ -87,18 +87,6 @@ public class PanelFiller {
         addEntry(name, String.valueOf(value));
     }
 
-    public void addTable(TableModel tableModel) {
-        JTable table = new JTable(tableModel);
-        table.getColumnModel().getColumn(0).setPreferredWidth(200);
-        Dimension dims = table.getPreferredScrollableViewportSize();
-        Logger.getAnonymousLogger().info(dims.getHeight() + " : " + dims.getWidth());
-        panel.add(table);
-        panel.setMaximumSize(dims);
-        panel.setMinimumSize(dims);
-        panel.setPreferredSize(dims);
-        panel.setSize(dims);
-    }
-
     public void complete() {
         assert panel != null;
         panel.revalidate();

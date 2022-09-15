@@ -33,6 +33,8 @@ public class IndexedUtils {
     }
 
     protected static List<Number> sequenceFromArray(List<Number> index, Map<Number, Number> values) {
-        return index.stream().map(values::get).toList();
+        List<Number> list = new ArrayList<>();
+        index.stream().map(values::get).forEach(list::add);
+        return list;
     }
 }

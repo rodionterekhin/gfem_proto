@@ -13,11 +13,12 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class GfemGUI extends BasicGUI {
     private final IMainController controller;
@@ -49,6 +50,7 @@ public class GfemGUI extends BasicGUI {
     private JMenuItem mniAbout, mniSupportedFunctions, mniExit;
     private JMenuItem mniLoadModel, mniLoadData;
     private HashMap<String, PanelFiller> panelFillers = new HashMap<>();
+    private String statusPrefix = "";
 
 
     public GfemGUI(IMainController controller, Image icon) {
@@ -60,10 +62,10 @@ public class GfemGUI extends BasicGUI {
         setIconImage(icon);
 
         menuBar = new JMenuBar();
-        mnuFile = new JMenu("Файл");
-        mniAbout = new JMenuItem("О программе");
-        mniSupportedFunctions = new JMenuItem("Поддерживаемые функции");
-        mniExit = new JMenuItem("Выход");
+        mnuFile = new JMenu(this.$$$getMessageFromBundle$$$("strings", "menu.file"));
+        mniAbout = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "menu.file.about"));
+        mniSupportedFunctions = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "menu.file.supported_functions"));
+        mniExit = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "menu.file.exit"));
         mniExit.addActionListener((ActionEvent ae) -> this.dispose());
         mniAbout.addActionListener((ActionEvent ae) -> controller.about());
         mniSupportedFunctions.addActionListener((ActionEvent ae) -> controller.available_functions());
@@ -71,10 +73,10 @@ public class GfemGUI extends BasicGUI {
         mnuFile.add(mniSupportedFunctions);
         mnuFile.add(mniExit);
 
-        mnuEdit = new JMenu("Правка");
-        mniLoadModel = new JMenuItem("Загрузить модель...");
+        mnuEdit = new JMenu(this.$$$getMessageFromBundle$$$("strings", "menu.edit"));
+        mniLoadModel = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "add.model"));
         mniLoadModel.addActionListener((ActionEvent ae) -> controller.loadModel());
-        mniLoadData = new JMenuItem("Загрузить данные...");
+        mniLoadData = new JMenuItem(this.$$$getMessageFromBundle$$$("strings", "add.input_data"));
         mniLoadData.addActionListener((ActionEvent ae) -> controller.loadCase());
         mnuEdit.add(mniLoadModel);
         mnuEdit.add(mniLoadData);
@@ -103,7 +105,6 @@ public class GfemGUI extends BasicGUI {
         // inputNumericScrollPane.setViewportView(inputNumericPanel);
         btnSaveToExcel.addActionListener((ActionEvent e) -> controller.saveToExcel());
         setupPanelFillers();
-
     }
 
     private void setupPanelFillers() {
@@ -162,16 +163,8 @@ public class GfemGUI extends BasicGUI {
         panelFillers.get("InputNumeric").addNumericEntry(name, value);
     }
 
-    public void addInputArrayEntry(String name, HashMap<Number, Number> value) {
-        panelFillers.get("InputArray").addArrayEntry(name, value);
-    }
-
     public void addOutputNumericEntry(String name, Number value) {
         panelFillers.get("OutputNumeric").addNumericEntry(name, value);
-    }
-
-    public void addOutputArrayEntry(String name, HashMap<Number, Number> value) {
-        panelFillers.get("OutputArray").addArrayEntry(name, value);
     }
 
     {
@@ -200,10 +193,10 @@ public class GfemGUI extends BasicGUI {
         inputPanel.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Исходные данные", inputPanel);
         final JLabel label1 = new JLabel();
-        label1.setText("Параметры расчета");
+        this.$$$loadLabelText$$$(label1, this.$$$getMessageFromBundle$$$("strings", "calculation.params"));
         inputPanel.add(label1, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
-        label2.setText("Массивы");
+        this.$$$loadLabelText$$$(label2, this.$$$getMessageFromBundle$$$("strings", "calculation.entries"));
         inputPanel.add(label2, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         inputPanel.add(spacer1, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
@@ -228,10 +221,10 @@ public class GfemGUI extends BasicGUI {
         resultsPanel.setLayout(new GridLayoutManager(3, 4, new Insets(0, 0, 0, 0), -1, -1));
         tabbedPane.addTab("Результаты расчета", resultsPanel);
         final JLabel label3 = new JLabel();
-        label3.setText("КПЭ");
+        this.$$$loadLabelText$$$(label3, this.$$$getMessageFromBundle$$$("strings", "calculation.kpe"));
         resultsPanel.add(label3, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label4 = new JLabel();
-        label4.setText("Массивы");
+        this.$$$loadLabelText$$$(label4, this.$$$getMessageFromBundle$$$("strings", "calculation.entries"));
         resultsPanel.add(label4, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer4 = new Spacer();
         resultsPanel.add(spacer4, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, 1, new Dimension(300, 10), new Dimension(300, 10), new Dimension(300, 10), 0, false));
@@ -249,7 +242,7 @@ public class GfemGUI extends BasicGUI {
         final Spacer spacer6 = new Spacer();
         resultsPanel.add(spacer6, new GridConstraints(1, 0, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, 1, new Dimension(3, -1), new Dimension(3, -1), new Dimension(3, -1), 0, false));
         btnCalculate = new JButton();
-        btnCalculate.setText("Рассчитать");
+        this.$$$loadButtonText$$$(btnCalculate, this.$$$getMessageFromBundle$$$("strings", "calculate"));
         panel1.add(btnCalculate, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer7 = new Spacer();
         panel1.add(spacer7, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
@@ -259,7 +252,7 @@ public class GfemGUI extends BasicGUI {
         panel1.add(spacer9, new GridConstraints(2, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
         btnSaveToExcel = new JButton();
         btnSaveToExcel.setEnabled(false);
-        btnSaveToExcel.setText("Выгрузка в эксель...");
+        this.$$$loadButtonText$$$(btnSaveToExcel, this.$$$getMessageFromBundle$$$("strings", "save.result.to.excel"));
         panel1.add(btnSaveToExcel, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator3 = new JSeparator();
         separator3.setOrientation(1);
@@ -268,10 +261,10 @@ public class GfemGUI extends BasicGUI {
         dataStructurePanel.setLayout(new GridLayoutManager(7, 3, new Insets(0, 0, 0, 0), -1, -1));
         mainPanel.add(dataStructurePanel, new GridConstraints(2, 1, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(300, -1), new Dimension(300, -1), new Dimension(300, -1), 0, false));
         btnAddModel = new JButton();
-        btnAddModel.setText("Добавить модель...");
+        this.$$$loadButtonText$$$(btnAddModel, this.$$$getMessageFromBundle$$$("strings", "add.model"));
         dataStructurePanel.add(btnAddModel, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnAddCase = new JButton();
-        btnAddCase.setText("Добавить кейс...");
+        this.$$$loadButtonText$$$(btnAddCase, this.$$$getMessageFromBundle$$$("strings", "add.input_data"));
         dataStructurePanel.add(btnAddCase, new GridConstraints(5, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer10 = new Spacer();
         dataStructurePanel.add(spacer10, new GridConstraints(1, 0, 5, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_GROW, 1, new Dimension(5, -1), new Dimension(5, -1), new Dimension(5, -1), 0, false));
@@ -280,10 +273,10 @@ public class GfemGUI extends BasicGUI {
         final Spacer spacer12 = new Spacer();
         dataStructurePanel.add(spacer12, new GridConstraints(6, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 10), new Dimension(-1, 10), new Dimension(-1, 10), 0, false));
         btnDeleteElement = new JButton();
-        btnDeleteElement.setText("Удалить элемент");
+        this.$$$loadButtonText$$$(btnDeleteElement, this.$$$getMessageFromBundle$$$("strings", "delete.element"));
         dataStructurePanel.add(btnDeleteElement, new GridConstraints(2, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         btnCreateDuplicate = new JButton();
-        btnCreateDuplicate.setText("Дублировать элемент");
+        this.$$$loadButtonText$$$(btnCreateDuplicate, this.$$$getMessageFromBundle$$$("strings", "duplicate.element"));
         dataStructurePanel.add(btnCreateDuplicate, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JSeparator separator4 = new JSeparator();
         dataStructurePanel.add(separator4, new GridConstraints(3, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 5), new Dimension(-1, 5), new Dimension(-1, 5), 0, false));
@@ -303,10 +296,9 @@ public class GfemGUI extends BasicGUI {
         final Spacer spacer15 = new Spacer();
         mainPanel.add(spacer15, new GridConstraints(2, 5, 2, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, 1, new Dimension(5, -1), new Dimension(5, -1), new Dimension(5, -1), 0, false));
         final JLabel label5 = new JLabel();
-        label5.setText("Модель для расчета:");
+        this.$$$loadLabelText$$$(label5, this.$$$getMessageFromBundle$$$("strings", "selected.model.label"));
         mainPanel.add(label5, new GridConstraints(2, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         cmbSelectedModel = new JComboBox();
-        cmbSelectedModel.setName("Модель");
         mainPanel.add(cmbSelectedModel, new GridConstraints(2, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer16 = new Spacer();
         mainPanel.add(spacer16, new GridConstraints(1, 3, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 2), new Dimension(-1, 2), new Dimension(-1, 2), 0, false));
@@ -315,12 +307,83 @@ public class GfemGUI extends BasicGUI {
         mainPanel.add(statusBarPanel, new GridConstraints(4, 0, 1, 6, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 20), new Dimension(-1, 20), new Dimension(-1, 20), 0, false));
         statusBarPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-4473925)), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         lblStatus = new JLabel();
-        lblStatus.setText("Готово");
         statusBarPanel.add(lblStatus, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer17 = new Spacer();
         statusBarPanel.add(spacer17, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JSeparator separator5 = new JSeparator();
         mainPanel.add(separator5, new GridConstraints(0, 0, 1, 6, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        label5.setLabelFor(cmbSelectedModel);
+    }
+
+    private static Method $$$cachedGetBundleMethod$$$ = null;
+
+    private String $$$getMessageFromBundle$$$(String path, String key) {
+        ResourceBundle bundle;
+        try {
+            Class<?> thisClass = this.getClass();
+            if ($$$cachedGetBundleMethod$$$ == null) {
+                Class<?> dynamicBundleClass = thisClass.getClassLoader().loadClass("com.intellij.DynamicBundle");
+                $$$cachedGetBundleMethod$$$ = dynamicBundleClass.getMethod("getBundle", String.class, Class.class);
+            }
+            bundle = (ResourceBundle) $$$cachedGetBundleMethod$$$.invoke(null, path, thisClass);
+        } catch (Exception e) {
+            bundle = ResourceBundle.getBundle(path);
+        }
+        return bundle.getString(key);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    private void $$$loadLabelText$$$(JLabel component, String text) {
+        StringBuffer result = new StringBuffer();
+        boolean haveMnemonic = false;
+        char mnemonic = '\0';
+        int mnemonicIndex = -1;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '&') {
+                i++;
+                if (i == text.length()) break;
+                if (!haveMnemonic && text.charAt(i) != '&') {
+                    haveMnemonic = true;
+                    mnemonic = text.charAt(i);
+                    mnemonicIndex = result.length();
+                }
+            }
+            result.append(text.charAt(i));
+        }
+        component.setText(result.toString());
+        if (haveMnemonic) {
+            component.setDisplayedMnemonic(mnemonic);
+            component.setDisplayedMnemonicIndex(mnemonicIndex);
+        }
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    private void $$$loadButtonText$$$(AbstractButton component, String text) {
+        StringBuffer result = new StringBuffer();
+        boolean haveMnemonic = false;
+        char mnemonic = '\0';
+        int mnemonicIndex = -1;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '&') {
+                i++;
+                if (i == text.length()) break;
+                if (!haveMnemonic && text.charAt(i) != '&') {
+                    haveMnemonic = true;
+                    mnemonic = text.charAt(i);
+                    mnemonicIndex = result.length();
+                }
+            }
+            result.append(text.charAt(i));
+        }
+        component.setText(result.toString());
+        if (haveMnemonic) {
+            component.setMnemonic(mnemonic);
+            component.setDisplayedMnemonicIndex(mnemonicIndex);
+        }
     }
 
     /**
@@ -331,7 +394,11 @@ public class GfemGUI extends BasicGUI {
     }
 
     public void setStatus(String status) {
-        lblStatus.setText(status);
+        lblStatus.setText(statusPrefix + status);
+    }
+
+    public void setStatusPrefix(String prefix) {
+        statusPrefix = prefix + " | ";
     }
 
     @Override
