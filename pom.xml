@@ -109,7 +109,6 @@
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
-<!--            <finalName>${project.artifactId}-${project.version}.${buildNumber}-full</finalName>-->
             <appendAssemblyId>false</appendAssemblyId>
           </configuration>
         </plugin>
